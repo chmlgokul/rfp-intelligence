@@ -27,6 +27,48 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown(
+    """
+    <style>
+    /* Modern Enterprise SaaS Styling */
+    .stApp {
+        background-color: #0B0F19;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background: rgba(17, 24, 39, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 12px;
+        transition: all 0.2s ease-in-out;
+    }
+    div[data-testid="stMetric"] {
+        background: rgba(30, 41, 59, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 12px 16px;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: transparent;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 8px;
+        padding: 8px 18px;
+        font-weight: 500;
+    }
+    .stButton > button {
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 def _initialise_state() -> None:
     defaults = {
@@ -80,6 +122,35 @@ def _process_upload(uploaded_file) -> None:
     finally:
         if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
+
+
+def _load_sample_file(file_path: str, file_name: str) -> None:
+    try:
+        suffix = os.path.splitext(file_name)[1].casefold()
+        if suffix == ".pdf":
+            pages = extract_pdf_text(file_path)
+        elif suffix in {".xls", ".xlsx", ".xlx"}:
+            pages = extract_spreadsheet_text(file_path)
+        else:
+            raise ValueError("Supported formats are PDF, XLS, and XLSX")
+        requirements = extract_requirements(pages)
+        st.session_state.update({
+            "pages": pages,
+            "requirements": requirements,
+            "matches": [],
+            "risks": [],
+            "questions": [],
+            "proposal": [],
+            "recommendation": {},
+            "file_name": file_name,
+            "opportunity_stage": "Analysis",
+            "opportunity_id": None,
+        })
+        _run_analysis("\n".join(DEFAULT_CAPABILITIES))
+        st.toast(f"Loaded {file_name}: {len(requirements)} requirements extracted.", icon=":material/check_circle:")
+        st.rerun()
+    except Exception as error:
+        st.error(f"Sample load failed: {error}", icon=":material/error:")
 
 
 def _run_analysis(capability_text: str) -> None:
@@ -230,10 +301,67 @@ if not requirements:
         else:
             st.info("No saved opportunities in the database yet. Pre-Sales teams can upload and save opportunities to populate this view.")
     else:
-        st.info(
-            "Start here: upload an RFP from the sidebar, process it, then review the extracted requirements.",
-            icon=":material/arrow_back:",
+        # Executive Command Hero Landing
+        st.markdown(
+            """
+            <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+                        border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 26px; margin-bottom: 22px;
+                        box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <span style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3);
+                                 padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">
+                        ● System Active & Ready
+                    </span>
+                    <span style="color: #94A3B8; font-size: 13px;">Pre-Sales Intelligence Platform v2.0</span>
+                </div>
+                <h2 style="color: #F8FAFC; margin: 0 0 8px 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">
+                    AI-Assisted Tender Intelligence & Bid Feasibility System
+                </h2>
+                <p style="color: #94A3B8; font-size: 15px; margin: 0; max-width: 820px; line-height: 1.6;">
+                    Accelerate RFP review from days to seconds. Automatically extract complex compliance requirements, 
+                    detect fatal capability gaps, analyze contractual liabilities, and produce explainable Bid / No-Bid recommendations.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
+
+        st.info("💡 Quick Start: Upload your tender document from the sidebar or click either pre-loaded sample below for an instant walkthrough.", icon=":material/lightbulb:")
+
+        st.subheader("⚡ Quick Demo: Test with Pre-Loaded Tenders", anchor=False)
+        st.caption("No tender file on hand? Click either button to load realistic sample RFPs and inspect the complete analysis immediately:")
+
+        qc1, qc2 = st.columns(2)
+        with qc1:
+            with st.container(border=True):
+                st.markdown("### 🏢 Smart City IoT Platform RFP (PDF)")
+                st.caption("4-page municipal tender with ISO 27001 requirements, 5-yr experience, 99.9% SLA, and penalties.")
+                if st.button("🚀 Load Smart City Tender (PDF)", type="primary", use_container_width=True):
+                    sample_path = os.path.join(os.path.dirname(__file__), "test_files", "Sample_Enterprise_SmartCity_RFP.pdf")
+                    _load_sample_file(sample_path, "Sample_Enterprise_SmartCity_RFP.pdf")
+        with qc2:
+            with st.container(border=True):
+                st.markdown("### 📋 Sewage Treatment Plant BOQ (Excel)")
+                st.caption("Real-world government Bill of Quantities workbook with operator mandates and supply items.")
+                if st.button("📊 Load BOQ Tender (Excel)", type="secondary", use_container_width=True):
+                    sample_path = os.path.join(os.path.dirname(__file__), "test_files", "BOQ_979798.xls")
+                    _load_sample_file(sample_path, "BOQ_979798.xls")
+
+        st.divider()
+        st.subheader("🔍 4-Stage Decision-Support Pipeline", anchor=False)
+        w1, w2, w3, w4 = st.columns(4)
+        with w1:
+            st.markdown("**1. Multi-Format Intake**")
+            st.caption("Native parsing of PDFs, Excel workbooks (.xls, .xlsx), and portal HTML tables into traceable units.")
+        with w2:
+            st.markdown("**2. Clause Intelligence**")
+            st.caption("Deterministic extraction across 9 categories (Technical, Eligibility, Timeline) with deadline detection.")
+        with w3:
+            st.markdown("**3. Capability Matching**")
+            st.caption("Token overlap scoring against your company profile to surface fatal deal-breakers and core strengths.")
+        with w4:
+            st.markdown("**4. Human-in-the-Loop**")
+            st.caption("Explainable 0–100 score. Proposal authoring strictly locked until human business approval.")
 else:
     with st.container(border=True):
         st.subheader("What to do next", anchor=False)
