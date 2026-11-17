@@ -1,8 +1,11 @@
-"""AssistLana RFP Intelligence - human-in-the-loop MVP."""
+"""RFP Intelligence — professional monochrome procurement workspace.
 
+The presentation layer is redesigned; the existing extraction, analysis,
+storage and human-approval functions remain backed by the modules package.
+"""
 import os
 import tempfile
-
+import html
 import pandas as pd
 import streamlit as st
 
@@ -11,775 +14,276 @@ from modules.requirement_extractor import extract_requirements
 from modules.spreadsheet_processor import extract_spreadsheet_text
 from modules.opportunity_storage import initialise_database, list_opportunities, load_opportunity, save_opportunity
 from modules.rfp_analysis import (
-    DEFAULT_CAPABILITIES,
-    bid_recommendation,
-    clarification_questions,
-    identify_risks,
-    match_requirements,
-    parse_capabilities,
-    proposal_mapping,
+    DEFAULT_CAPABILITIES, bid_recommendation, clarification_questions,
+    identify_risks, match_requirements, parse_capabilities, proposal_mapping,
 )
 
+st.set_page_config(page_title="RFP Intelligence", page_icon="◈", layout="wide", initial_sidebar_state="expanded")
 
-st.set_page_config(
-    page_title="AssistLana | RFP Intelligence",
-    page_icon=":material/description:",
-    layout="wide",
-)
+st.markdown(r"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{--ink:#171717;--muted:#6b7280;--line:#dedede;--soft:#f6f6f6;--white:#ffffff;--black:#111111}
+html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f3f4f5!important;color:var(--ink)!important;font-family:Inter,Arial,sans-serif!important}
+[data-testid="stHeader"]{background:rgba(255,255,255,.96)!important;border-bottom:1px solid #e7e7e7}
+[data-testid="stMain"]{background:#f3f4f5!important}
+[data-testid="stMainBlockContainer"],.main .block-container{max-width:1600px!important;padding:1.35rem 1.65rem 3rem!important}
+/* Dark, compact navigation rail */
+[data-testid="stSidebar"]{background:#151515!important;border-right:1px solid #303030!important}
+[data-testid="stSidebar"]>div:first-child{background:transparent!important}
+[data-testid="stSidebar"] *{color:#f5f5f5!important}
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p{font-weight:650!important;color:#e9e9e9!important}
+[data-testid="stSidebar"] [data-testid="stRadio"] label{padding:.48rem .62rem;border-radius:8px;border:1px solid transparent}
+[data-testid="stSidebar"] [data-testid="stRadio"] label:hover{background:#292929;border-color:#444}
+[data-testid="stSidebar"] [data-testid="stRadio"] [aria-checked="true"]{background:#303030;border-color:#777}
+[data-testid="stSidebar"] .stButton>button,[data-testid="stSidebar"] .stDownloadButton>button{background:#f4f4f4!important;border:1px solid #f4f4f4!important;color:#111!important;border-radius:8px!important;font-weight:650!important}
+[data-testid="stSidebar"] .stButton>button:hover,[data-testid="stSidebar"] .stDownloadButton>button:hover{background:#dedede!important;border-color:#dedede!important}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section{background:#202020!important;border:1px dashed #777!important;border-radius:10px!important}
+[data-testid="stSidebar"] [data-testid="stTextArea"] textarea,[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"]{background:#242424!important;color:#fff!important;border:1px solid #555!important}
+/* Header and hero */
+.rfp-topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:.35rem .25rem 1rem;border-bottom:1px solid #dedede;margin-bottom:1.15rem}
+.rfp-brand{font-size:1.2rem;font-weight:800;letter-spacing:-.035em;color:#111}
+.rfp-brand span{color:#555}
+.rfp-topmeta{font-size:.8rem;color:#737373;letter-spacing:.01em}
+.rfp-hero{position:relative;overflow:hidden;border:1px solid #dedede;border-radius:15px;padding:1.45rem 1.6rem;margin:.25rem 0 1rem;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.035)}
+.rfp-hero:before{content:"";position:absolute;right:0;top:0;width:7px;height:100%;background:#171717}
+.rfp-hero h1{position:relative;color:#111!important;font-size:clamp(1.8rem,3vw,2.35rem)!important;font-weight:800!important;letter-spacing:-.045em!important;margin:0 0 .3rem!important}
+.rfp-hero h1 span{color:#555}
+.rfp-hero p{position:relative;color:#6b7280!important;margin:.15rem 0 0;font-size:.95rem}
+.rfp-stage-pill{position:absolute;right:1.4rem;top:1.15rem;z-index:2;border:1px solid #d8d8d8;border-radius:10px;padding:.6rem .85rem;background:#f7f7f7;color:#222;font-weight:700;min-width:145px}
+/* Simple four-step workflow */
+.rfp-workflow{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;position:relative;background:#fff;border:1px solid #dedede;border-radius:14px;padding:1rem 1.15rem .85rem;margin:1.05rem 0 1.35rem;box-shadow:0 4px 14px rgba(0,0,0,.025)}
+.rfp-step{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.rfp-stepnum{flex:0 0 34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.95rem;background:#ededed;border:1px solid #d5d5d5;color:#222}
+.rfp-stepnum.done{background:#171717;border-color:#171717;color:#fff}
+.rfp-step strong{display:block;color:#171717;font-size:.86rem;margin:.1rem 0 .25rem}
+.rfp-step small{color:#777;font-size:.74rem}
+.rfp-flowbar{grid-column:1/-1;height:6px;border-radius:20px;background:#e8e8e8;overflow:hidden;margin:.15rem .15rem 0}
+.rfp-flowbar span{display:block;height:100%;border-radius:20px;background:#171717;transition:width .35s ease}
+.rfp-section-title{font-size:1.2rem;font-weight:800;color:#171717;margin:.65rem 0 .8rem;letter-spacing:-.025em}
+/* Six consistent monochrome KPI cards */
+.rfp-kpis{display:grid;grid-template-columns:repeat(5,minmax(115px,1fr)) minmax(220px,1.55fr);gap:12px;margin-bottom:.7rem}
+.rfp-kpi{position:relative;overflow:hidden;min-height:112px;padding:.95rem 1rem;border-radius:12px;color:#171717;border:1px solid #dedede;border-top:3px solid #171717;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.035);transition:transform .18s ease,box-shadow .18s ease;animation:fadein .3s ease both}
+.rfp-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.07)}
+.rfp-kpi .ico{font-size:1.1rem;margin-bottom:.35rem;color:#555}
+.rfp-kpi .lab{font-size:.76rem;color:#666;font-weight:650}
+.rfp-kpi .val{font-size:1.85rem;line-height:1.2;font-weight:800;color:#111;margin-top:.2rem;letter-spacing:-.04em}
+.rfp-kpi.decision .val{font-size:1.18rem;letter-spacing:-.02em;margin-top:.55rem}
+.rfp-kpi.cyan,.rfp-kpi.purple,.rfp-kpi.amber,.rfp-kpi.green,.rfp-kpi.pink,.rfp-kpi.teal{--a:#fff;--b:#fff;--edge:#171717;--glow:rgba(0,0,0,.04)}
+/* Analysis panels */
+.rfp-panel{border-radius:14px;padding:1.15rem 1.25rem;border:1px solid #dcdcdc;border-left:4px solid #222;background:#fff;box-shadow:0 4px 15px rgba(0,0,0,.035);color:#222;min-height:210px;animation:fadein .35s ease both}
+.rfp-panel h3{color:#171717!important;font-size:1.1rem!important;margin:0 0 .85rem!important}
+.rfp-panel p,.rfp-panel li{color:#333!important}
+.rfp-panel .muted{color:#777;font-size:.8rem}
+.rfp-panel.pinkpanel,.rfp-panel.bluepanel,.rfp-panel.rfp-risk,.rfp-panel.rfp-strength{--a:#fff;--b:#fff;--edge:#222;--glow:rgba(0,0,0,.04);background:#fff;border-color:#ddd;border-left-color:#222}
+.rfp-score{font-size:2.45rem;font-weight:800;letter-spacing:-.04em;color:#111}
+.rfp-scorebar{height:9px;border-radius:20px;background:#e7e7e7;overflow:hidden;margin:.7rem 0}
+.rfp-scorebar span{display:block;height:100%;border-radius:20px;background:#171717}
+.rfp-verdict{display:inline-block;padding:.3rem .65rem;border-radius:6px;background:#171717;border:1px solid #171717;font-size:.74rem;font-weight:750;color:#fff;margin-left:.5rem}
+.rfp-two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:1rem 0}
+/* Streamlit widgets */
+[data-testid="stTabs"] [role="tablist"]{gap:8px;border-bottom:1px solid #ddd}
+[data-testid="stTabs"] button[role="tab"]{color:#666!important;border-radius:8px 8px 0 0;padding:.62rem .8rem;font-weight:650}
+[data-testid="stTabs"] button[aria-selected="true"]{color:#111!important;background:#f0f0f0!important;border-bottom:3px solid #111!important}
+[data-testid="stTabs"] button p{color:inherit!important}
+[data-testid="stMetric"]{background:#fff!important;border:1px solid #ddd!important;border-radius:11px!important;padding:.8rem!important}
+[data-testid="stMetricLabel"],[data-testid="stMetricLabel"] p,[data-testid="stMetricValue"],[data-testid="stMetricValue"] div{color:#171717!important}
+[data-testid="stVerticalBlockBorderWrapper"]{background:#fff!important;border:1px solid #ddd!important;border-radius:13px!important;box-shadow:0 4px 14px rgba(0,0,0,.025)!important}
+.stButton>button,.stDownloadButton>button{border-radius:8px!important;border:1px solid #171717!important;background:#171717!important;color:#fff!important;font-weight:650!important;transition:all .18s ease!important}
+.stButton>button:hover,.stDownloadButton>button:hover{background:#3b3b3b!important;border-color:#3b3b3b!important;transform:translateY(-1px)}
+.stButton>button[kind="primary"]{background:#111!important;border:1px solid #111!important;color:#fff!important}
+.stTextInput input,.stTextArea textarea,.stSelectbox div[data-baseweb="select"],.stMultiSelect div[data-baseweb="select"]{background:#fff!important;color:#171717!important;border:1px solid #d0d0d0!important;border-radius:8px!important}
+.stTextInput input::placeholder,.stTextArea textarea::placeholder{color:#888!important}
+[data-testid="stDataFrame"],[data-testid="stDataEditor"]{border:1px solid #ddd;border-radius:10px;overflow:hidden}
+[data-testid="stAlert"]{border-radius:10px!important}
+[data-testid="stCaptionContainer"] p{color:#777!important}
+hr{border-color:#e2e2e2!important}
+@keyframes fadein{from{opacity:.75;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1050px){.rfp-kpis{grid-template-columns:repeat(3,1fr)}.rfp-workflow{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){[data-testid="stMainBlockContainer"],.main .block-container{padding:.65rem .65rem 2rem!important}.rfp-kpis{grid-template-columns:repeat(2,1fr)}.rfp-two-col{grid-template-columns:1fr}.rfp-stage-pill{position:relative;right:auto;top:auto;margin-top:.8rem;display:inline-block}.rfp-workflow{grid-template-columns:1fr}.rfp-topbar{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+""", unsafe_allow_html=True)
 
-st.markdown(
-    """
-    <style>
-    /* Modern Enterprise SaaS Styling */
-    .stApp {
-        background-color: #0B0F19;
-    }
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        background: rgba(17, 24, 39, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        border-radius: 12px;
-        transition: all 0.2s ease-in-out;
-    }
-    div[data-testid="stMetric"] {
-        background: rgba(30, 41, 59, 0.45);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 10px;
-        padding: 12px 16px;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: transparent;
-    }
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 8px;
-        padding: 8px 18px;
-        font-weight: 500;
-    }
-    .stButton > button {
-        border-radius: 8px;
-        font-weight: 600;
-        transition: all 0.2s ease;
-    }
-    .stButton > button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+
+def init_state():
+    defaults={"pages":[],"requirements":[],"matches":[],"risks":[],"questions":[],"proposal":[],"recommendation":{},"file_name":"","opportunity_stage":"New","human_decision":"Pending human review","decision_notes":"","opportunity_id":None}
+    for k,v in defaults.items(): st.session_state.setdefault(k,v)
 
 
-def _initialise_state() -> None:
-    defaults = {
-        "pages": [],
-        "requirements": [],
-        "matches": [],
-        "risks": [],
-        "questions": [],
-        "proposal": [],
-        "recommendation": {},
-        "file_name": "",
-        "opportunity_stage": "New",
-        "human_decision": "Pending human review",
-        "decision_notes": "",
-        "opportunity_id": None,
-    }
-    for key, value in defaults.items():
-        st.session_state.setdefault(key, value)
-
-
-def _process_upload(uploaded_file) -> None:
-    temp_path = None
+def process_upload(uploaded_file):
+    temp_path=None
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
-            temp_file.write(uploaded_file.getvalue())
-            temp_path = temp_file.name
-        suffix = os.path.splitext(uploaded_file.name)[1].casefold()
-        if suffix == ".pdf":
-            pages = extract_pdf_text(temp_path)
-        elif suffix in {".xls", ".xlsx", ".xlx"}:
-            pages = extract_spreadsheet_text(temp_path)
-        else:
-            raise ValueError("Supported formats are PDF, XLS, and XLSX")
-        requirements = extract_requirements(pages)
-        st.session_state.update({
-            "pages": pages,
-            "requirements": requirements,
-            "matches": [],
-            "risks": [],
-            "questions": [],
-            "proposal": [],
-            "recommendation": {},
-            "file_name": uploaded_file.name,
-            "opportunity_stage": "Analysis",
-            "opportunity_id": None,
-        })
-        source_units = "pages" if suffix == ".pdf" else "worksheets"
-        st.success(f"Processed {uploaded_file.name}: {len(pages)} {source_units} and {len(requirements)} requirements found.", icon=":material/check_circle:")
-    except Exception as error:
-        st.error(f"Document processing failed: {error}", icon=":material/error:")
+        suffix=os.path.splitext(uploaded_file.name)[1].casefold()
+        with tempfile.NamedTemporaryFile(delete=False,suffix=suffix) as f:
+            f.write(uploaded_file.getvalue()); temp_path=f.name
+        if suffix==".pdf": pages=extract_pdf_text(temp_path)
+        elif suffix in {".xls",".xlsx",".xlx"}: pages=extract_spreadsheet_text(temp_path)
+        else: raise ValueError("Supported formats are PDF, XLS and XLSX")
+        reqs=extract_requirements(pages)
+        st.session_state.update({"pages":pages,"requirements":reqs,"matches":[],"risks":[],"questions":[],"proposal":[],"recommendation":{},"file_name":uploaded_file.name,"opportunity_stage":"Analysis","opportunity_id":None,"human_decision":"Pending human review","decision_notes":""})
+        st.success(f"Processed {uploaded_file.name}: {len(pages)} pages / worksheets and {len(reqs)} requirements found.")
+    except Exception as e: st.error(f"Document processing failed: {e}")
     finally:
-        if temp_path and os.path.exists(temp_path):
-            os.remove(temp_path)
+        if temp_path and os.path.exists(temp_path): os.remove(temp_path)
 
 
-def _load_sample_file(file_path: str, file_name: str) -> None:
-    try:
-        suffix = os.path.splitext(file_name)[1].casefold()
-        if suffix == ".pdf":
-            pages = extract_pdf_text(file_path)
-        elif suffix in {".xls", ".xlsx", ".xlx"}:
-            pages = extract_spreadsheet_text(file_path)
-        else:
-            raise ValueError("Supported formats are PDF, XLS, and XLSX")
-        requirements = extract_requirements(pages)
-        st.session_state.update({
-            "pages": pages,
-            "requirements": requirements,
-            "matches": [],
-            "risks": [],
-            "questions": [],
-            "proposal": [],
-            "recommendation": {},
-            "file_name": file_name,
-            "opportunity_stage": "Analysis",
-            "opportunity_id": None,
-        })
-        _run_analysis("\n".join(DEFAULT_CAPABILITIES))
-        st.toast(f"Loaded {file_name}: {len(requirements)} requirements extracted.", icon=":material/check_circle:")
-        st.rerun()
-    except Exception as error:
-        st.error(f"Sample load failed: {error}", icon=":material/error:")
+def run_analysis(capability_text):
+    reqs=st.session_state.get("requirements",[])
+    matches=match_requirements(reqs,capability_text); risks=identify_risks(matches)
+    st.session_state.update({"matches":matches,"risks":risks,"questions":clarification_questions(matches),"proposal":proposal_mapping(matches),"recommendation":bid_recommendation(matches,risks),"opportunity_stage":"Review"})
+    st.success("Capability comparison and decision-support analysis updated.")
 
 
-def _run_analysis(capability_text: str) -> None:
-    requirements = st.session_state.get("requirements", [])
-    matches = match_requirements(requirements, capability_text)
-    risks = identify_risks(matches)
-    st.session_state.update({
-        "matches": matches,
-        "risks": risks,
-        "questions": clarification_questions(matches),
-        "proposal": proposal_mapping(matches),
-        "recommendation": bid_recommendation(matches, risks),
-    })
-    st.session_state["opportunity_stage"] = "Review"
-    st.success("Capability comparison and decision-support analysis updated.", icon=":material/insights:")
+def save_current():
+    if not st.session_state.get("file_name"): st.warning("Process an RFP before saving."); return
+    payload={k:st.session_state[k] for k in ("pages","requirements","matches","risks","questions","proposal","recommendation","file_name","opportunity_stage","human_decision","decision_notes")}
+    oid=save_opportunity(payload,st.session_state.get("opportunity_id")); st.session_state["opportunity_id"]=oid; st.success(f"Opportunity saved as #{oid}.")
 
 
-def _current_payload() -> dict[str, object]:
-    return {
-        key: st.session_state[key]
-        for key in ("pages", "requirements", "matches", "risks", "questions", "proposal", "recommendation", "file_name", "opportunity_stage", "human_decision", "decision_notes")
-        if key in st.session_state
-    }
-
-
-def _normalise_proposal_rows(rows: list[dict[str, object]]) -> list[dict[str, object]]:
-    """Migrate proposal rows created before the current proposal schema."""
-    normalised = []
-    for row in rows:
-        item = dict(row)
-        evidence = str(item.get("Evidence / Notes") or "No matching capability provided")
-        item.setdefault("Draft Response", f"Draft: Confirm the requirement and supporting evidence: {evidence}.")
-        item.setdefault("Human Approval", "Not Reviewed")
-        normalised.append(item)
-    return normalised
-
-
-def _save_current_opportunity() -> None:
-    if not st.session_state["file_name"]:
-        st.warning("Process an RFP before saving an opportunity.", icon=":material/upload_file:")
-        return
-    opportunity_id = save_opportunity(_current_payload(), st.session_state.get("opportunity_id"))
-    st.session_state["opportunity_id"] = opportunity_id
-    st.success(f"Opportunity saved as #{opportunity_id}.", icon=":material/save:")
-
-
-def _load_saved_opportunity(opportunity_id: int) -> None:
-    payload = load_opportunity(opportunity_id)
-    if not payload:
-        st.error("Saved opportunity could not be loaded.", icon=":material/error:")
-        return
-    for key, value in payload.items():
-        if key in {"opportunity_id", "pages", "requirements", "matches", "risks", "questions", "proposal", "recommendation", "file_name", "opportunity_stage", "human_decision", "decision_notes"}:
-            st.session_state[key] = value
-    st.session_state.pop("decision_center_select", None)
-    st.session_state.pop("requirements_editor", None)
-    st.session_state.pop("proposal_editor", None)
+def load_saved(oid):
+    payload=load_opportunity(oid)
+    if not payload: st.error("Saved opportunity could not be loaded."); return
+    for k,v in payload.items():
+        if k in st.session_state: st.session_state[k]=v
+        elif k in ("pages","requirements","matches","risks","questions","proposal","recommendation","file_name","opportunity_stage","human_decision","decision_notes","opportunity_id"): st.session_state[k]=v
+    for k in ("requirements_editor","proposal_editor"): st.session_state.pop(k,None)
     st.rerun()
 
 
-_initialise_state()
-initialise_database()
-st.session_state["proposal"] = _normalise_proposal_rows(st.session_state["proposal"])
+def safe(v): return html.escape(str(v if v is not None else ""))
 
-st.title("AssistLana - RFP intelligence")
-st.caption("AI-assisted tender analysis for evidence-led, human-approved decisions")
 
-with st.sidebar:
-    user_role = st.selectbox(
-        "User Role",
-        ["Business Development / Pre-Sales", "Admin"],
-        index=0,
-        help="Switch between Pre-Sales opportunity workflow and Admin capability & portfolio oversight.",
-    )
-    st.divider()
-    st.header("Opportunity intake")
-    uploaded_file = st.file_uploader("Upload an RFP or tender document", type=["pdf", "xls", "xlsx", "xlx"])
-    if uploaded_file and st.button("Process document", width="stretch", type="primary"):
-        _process_upload(uploaded_file)
+def metric_card(icon,label,value,colour,decision=False):
+    cls=f"rfp-kpi {colour}"+(" decision" if decision else "")
+    return f'<div class="{cls}"><div class="ico">{icon}</div><div class="lab">{safe(label)}</div><div class="val">{safe(value)}</div></div>'
 
-    st.divider()
-    st.subheader("Company capability profile")
-    capability_text = st.text_area(
-        "Add one capability per line",
-        value="\n".join(DEFAULT_CAPABILITIES),
-        height=180,
-        help="This profile is used only to produce explainable matches and gaps.",
-    )
-    if st.button("Run capability analysis", width="stretch", disabled=not st.session_state["requirements"]):
-        _run_analysis(capability_text)
 
-    st.divider()
-    stage_options = ["New", "Analysis", "Review", "Bid Decision", "Proposal", "Submitted", "Won", "Lost"]
-    st.session_state["opportunity_stage"] = st.selectbox(
-        "Opportunity stage", stage_options, index=stage_options.index(st.session_state["opportunity_stage"]),
-    )
-    st.caption(f"Human decision: **{st.session_state['human_decision']}**")
-    st.divider()
-    st.subheader("Saved opportunities")
-    saved_opportunities = list_opportunities()
-    opportunity_labels = ["Create new / current opportunity"] + [
-        f"#{item['id']} · {item['file_name']} · {item['stage']}" for item in saved_opportunities
-    ]
-    selected_saved = st.selectbox("Load a saved opportunity", opportunity_labels, key="saved_opportunity_picker")
-    if st.button("Load selected opportunity", width="stretch", disabled=selected_saved == opportunity_labels[0], icon=":material/folder_open:"):
-        selected_id = saved_opportunities[opportunity_labels.index(selected_saved) - 1]["id"]
-        _load_saved_opportunity(int(selected_id))
-    if st.button("Save current opportunity", width="stretch", disabled=not st.session_state["file_name"], icon=":material/save:"):
-        _save_current_opportunity()
-    if st.button("Clear current opportunity", width="stretch"):
-        for key in ("pages", "requirements", "matches", "risks", "questions", "proposal", "recommendation", "file_name"):
-            st.session_state[key] = {} if key == "recommendation" else [] if key != "file_name" else ""
-        st.session_state.pop("decision_center_select", None)
-        st.session_state.pop("saved_opportunity_picker", None)
-        st.session_state["opportunity_id"] = None
-        st.session_state["opportunity_stage"] = "New"
-        st.session_state["human_decision"] = "Pending human review"
-        st.rerun()
+def main():
+    init_state(); initialise_database()
+    # Simple, always-visible workflow controls: upload -> review -> capability analysis.
+    with st.sidebar:
+        st.markdown("<div style='font-size:1.08rem;font-weight:800;letter-spacing:-.035em;margin:.25rem 0 1rem;color:#fff'>RFP INTELLIGENCE</div>",unsafe_allow_html=True)
+        nav=st.radio("WORKSPACE",["⌂  Dashboard","▤  Requirements","◈  Capability Match","⚠  Risk Analysis","◎  Decision Centre","▣  Proposal Support","▦  Opportunities"],label_visibility="collapsed",key="main_navigation")
+        st.markdown("<div style='height:1px;background:#444;margin:1rem 0'></div>",unsafe_allow_html=True)
 
-requirements = st.session_state["requirements"]
-matches = st.session_state["matches"]
-risks = st.session_state["risks"]
-recommendation = st.session_state["recommendation"]
-if "decision_center_select" in st.session_state:
-    st.session_state["human_decision"] = st.session_state["decision_center_select"]
+        st.subheader("1. Opportunity intake")
+        up=st.file_uploader("Upload RFP / tender document",type=["pdf","xls","xlsx","xlx"],key="rfp_upload")
+        if up and st.button("Process document",type="primary",use_container_width=True): process_upload(up)
 
-if not requirements:
-    if user_role == "Admin":
-        st.info("Admin Mode: Manage organization capabilities and review historical portfolio metrics.", icon=":material/admin_panel_settings:")
-        saved_rows = list_opportunities()
-        if saved_rows:
-            st.subheader("Organization Portfolio Overview")
-            p_df = pd.DataFrame(saved_rows)
-            c1, c2, c3, c4 = st.columns(4)
-            c1.metric("Total Tracked Opportunities", len(p_df))
-            won_cnt = sum(p_df["stage"] == "Won")
-            lost_cnt = sum(p_df["stage"] == "Lost")
-            win_rate = f"{(won_cnt / (won_cnt + lost_cnt) * 100):.1f}%" if (won_cnt + lost_cnt) > 0 else "N/A"
-            c2.metric("Won Opportunities", won_cnt)
-            c3.metric("Lost Opportunities", lost_cnt)
-            c4.metric("Win Rate", win_rate)
+        st.markdown("<div style='height:1px;background:#444;margin:1.1rem 0'></div>",unsafe_allow_html=True)
+        st.subheader("2. Company capability profile")
+        cap=st.text_area("One capability per line",value="\n".join(DEFAULT_CAPABILITIES),height=155,key="capability_profile",help="Edit this profile to reflect the capabilities relevant to the current tender.")
+        if st.button("Run capability analysis",use_container_width=True,disabled=not bool(st.session_state["requirements"])): run_analysis(cap)
 
-            st.dataframe(
-                p_df.rename(columns={"id": "ID", "file_name": "RFP File", "stage": "Stage", "human_decision": "Decision", "updated_at": "Updated"}),
-                width="stretch",
-                hide_index=True,
-            )
+        st.markdown("<div style='height:1px;background:#444;margin:1.1rem 0'></div>",unsafe_allow_html=True)
+        stage_options=["New","Analysis","Review","Bid Decision","Proposal","Submitted","Won","Lost"]
+        stage=st.selectbox("Opportunity stage",stage_options,index=stage_options.index(st.session_state["opportunity_stage"]) if st.session_state["opportunity_stage"] in stage_options else 0)
+        st.session_state["opportunity_stage"]=stage
+        st.caption(f"Human decision: **{st.session_state['human_decision']}**")
+
+        with st.expander("Saved opportunities",expanded=False):
+            saved=list_opportunities(); labels=["Create new / current opportunity"]+[f"#{x['id']} · {x['file_name']} · {x['stage']}" for x in saved]
+            selected=st.selectbox("Load opportunity",labels)
+            if st.button("Load selected",use_container_width=True,disabled=selected==labels[0]): load_saved(int(saved[labels.index(selected)-1]["id"]))
+            if st.button("Save current opportunity",use_container_width=True,disabled=not bool(st.session_state["file_name"])): save_current()
+            if st.button("Clear current opportunity",use_container_width=True):
+                for k in ("pages","requirements","matches","risks","questions","proposal"): st.session_state[k]=[]
+                st.session_state.update({"recommendation":{},"file_name":"","opportunity_stage":"New","human_decision":"Pending human review","decision_notes":"","opportunity_id":None}); st.rerun()
+
+    reqs=st.session_state["requirements"]; matches=st.session_state["matches"]; risks=st.session_state["risks"]; rec=st.session_state["recommendation"]
+    stage=st.session_state["opportunity_stage"]
+    st.markdown(f"<div class='rfp-topbar'><div class='rfp-brand'>RFP <span>Intelligence</span></div><div class='rfp-topmeta'>Procurement Intelligence Workspace</div><div class='rfp-topmeta'>◉  Evidence-led · Human-approved</div></div>",unsafe_allow_html=True)
+    st.markdown(f"<div class='rfp-hero'><div class='rfp-stage-pill'>▣ &nbsp; Current Stage<br><span style='font-size:1.05rem'>{safe(stage)}</span></div><h1>RFP Intelligence</h1><p>AI-assisted tender analysis for evidence-led, human-approved decisions.</p></div>",unsafe_allow_html=True)
+    progress={"New":.15,"Analysis":.4,"Review":.7,"Bid Decision":.82,"Proposal":.92,"Submitted":1,"Won":1,"Lost":1}.get(stage,.15)
+    step_html=''.join([f"<div class='rfp-step'><div class='rfp-stepnum {'done' if i==0 and reqs else ''}'>{'✓' if i==0 and reqs else i+1}</div><div><strong>{t}</strong><small>{d}</small></div></div>" for i,(t,d) in enumerate([("Review requirements","Confirm type, deadline and source."),("Check capability match","Validate matches and gaps."),("Review risks","Assign actions for open risks."),("Make human decision","Choose Bid, No-Bid, or Hold.")])])
+    st.markdown(f"<div class='rfp-workflow'>{step_html}<div class='rfp-flowbar'><span style='width:{int(progress*100)}%'></span></div></div>",unsafe_allow_html=True)
+
+    mandatory=sum(x.get("Type")=="Mandatory" for x in reqs); deadlines=sum(bool(x.get("Deadline")) for x in reqs)
+    kpis=[metric_card("▤","RFP Pages",len(st.session_state["pages"]),"cyan"),metric_card("▱","Requirements",len(reqs),"purple"),metric_card("⬡","Mandatory",mandatory,"amber"),metric_card("▣","Deadlines Identified",deadlines,"green"),metric_card("⚠","Open Risks",len(risks),"pink"),metric_card("⌁","Human Decision",st.session_state["human_decision"],"teal",True)]
+    st.markdown("<div class='rfp-section-title'>Opportunity dashboard</div><div class='rfp-kpis'>"+''.join(kpis)+"</div>",unsafe_allow_html=True)
+    st.caption(f"Opportunity: {st.session_state['file_name'] or 'No document uploaded'}  |  Stage: {stage}  |  {'Saved #' + str(st.session_state['opportunity_id']) if st.session_state.get('opportunity_id') else 'Unsaved opportunity'}")
+
+    # Dashboard landing view follows the supplied image composition.
+    if nav.startswith("⌂"):
+        if not reqs:
+            st.info("Upload an RFP or tender document from the left navigation to begin.")
         else:
-            st.info("No saved opportunities in the database yet. Pre-Sales teams can upload and save opportunities to populate this view.")
-    else:
-        # Executive Command Hero Landing
-        st.markdown(
-            """
-            <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
-                        border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 26px; margin-bottom: 22px;
-                        box-shadow: 0 4px 20px rgba(0,0,0,0.35);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <span style="background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3);
-                                 padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">
-                        ● System Active & Ready
-                    </span>
-                    <span style="color: #94A3B8; font-size: 13px;">Pre-Sales Intelligence Platform v2.0</span>
-                </div>
-                <h2 style="color: #F8FAFC; margin: 0 0 8px 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">
-                    AI-Assisted Tender Intelligence & Bid Feasibility System
-                </h2>
-                <p style="color: #94A3B8; font-size: 15px; margin: 0; max-width: 820px; line-height: 1.6;">
-                    Accelerate RFP review from days to seconds. Automatically extract complex compliance requirements, 
-                    detect fatal capability gaps, analyze contractual liabilities, and produce explainable Bid / No-Bid recommendations.
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        st.info("💡 Quick Start: Upload your tender document from the sidebar or click either pre-loaded sample below for an instant walkthrough.", icon=":material/lightbulb:")
-
-        st.subheader("⚡ Quick Demo: Test with Pre-Loaded Tenders", anchor=False)
-        st.caption("No tender file on hand? Click either button to load realistic sample RFPs and inspect the complete analysis immediately:")
-
-        qc1, qc2 = st.columns(2)
-        with qc1:
-            with st.container(border=True):
-                st.markdown("### 🏢 Smart City IoT Platform RFP (PDF)")
-                st.caption("4-page municipal tender with ISO 27001 requirements, 5-yr experience, 99.9% SLA, and penalties.")
-                if st.button("🚀 Load Smart City Tender (PDF)", type="primary", use_container_width=True):
-                    sample_path = os.path.join(os.path.dirname(__file__), "test_files", "Sample_Enterprise_SmartCity_RFP.pdf")
-                    _load_sample_file(sample_path, "Sample_Enterprise_SmartCity_RFP.pdf")
-        with qc2:
-            with st.container(border=True):
-                st.markdown("### 📋 Sewage Treatment Plant BOQ (Excel)")
-                st.caption("Real-world government Bill of Quantities workbook with operator mandates and supply items.")
-                if st.button("📊 Load BOQ Tender (Excel)", type="secondary", use_container_width=True):
-                    sample_path = os.path.join(os.path.dirname(__file__), "test_files", "BOQ_979798.xls")
-                    _load_sample_file(sample_path, "BOQ_979798.xls")
-
-        st.divider()
-        st.subheader("🔍 4-Stage Decision-Support Pipeline", anchor=False)
-        w1, w2, w3, w4 = st.columns(4)
-        with w1:
-            st.markdown("**1. Multi-Format Intake**")
-            st.caption("Native parsing of PDFs, Excel workbooks (.xls, .xlsx), and portal HTML tables into traceable units.")
-        with w2:
-            st.markdown("**2. Clause Intelligence**")
-            st.caption("Deterministic extraction across 9 categories (Technical, Eligibility, Timeline) with deadline detection.")
-        with w3:
-            st.markdown("**3. Capability Matching**")
-            st.caption("Token overlap scoring against your company profile to surface fatal deal-breakers and core strengths.")
-        with w4:
-            st.markdown("**4. Human-in-the-Loop**")
-            st.caption("Explainable 0–100 score. Proposal authoring strictly locked until human business approval.")
-else:
-    with st.container(border=True):
-        st.subheader("What to do next", anchor=False)
-        st.caption("Follow these steps before making a final business decision.")
-        step_cols = st.columns(4)
-        workflow_steps = [
-            ("1", "Review requirements", "Confirm type, deadline, and source."),
-            ("2", "Check capability match", "Validate matches and gaps."),
-            ("3", "Review risks", "Assign actions for open risks."),
-            ("4", "Make human decision", "Choose Bid, No-Bid, or Hold."),
-        ]
-        for column, (number, title, description) in zip(step_cols, workflow_steps):
-            with column:
-                st.markdown(f"**{number}. {title}**")
-                st.caption(description)
-        st.progress(
-            {"New": 0.2, "Analysis": 0.4, "Review": 0.7, "Bid Decision": 0.85, "Proposal": 1.0}.get(
-                st.session_state["opportunity_stage"], 0.7
-            ),
-            text=f"Current stage: {st.session_state['opportunity_stage']}",
-        )
-
-    st.subheader("Opportunity dashboard")
-    metrics = [
-        ("RFP pages", len(st.session_state["pages"])),
-        ("Requirements", len(requirements)),
-        ("Mandatory", sum(item.get("Type") == "Mandatory" for item in requirements)),
-        ("Deadlines identified", sum(bool(item.get("Deadline")) for item in requirements)),
-        ("Open risks", len(risks)),
-        ("Human decision", st.session_state["human_decision"]),
-    ]
-    with st.container(horizontal=True):
-        for label, value in metrics:
-            st.metric(label, value, border=True)
-
-    saved_label = f"Saved opportunity #{st.session_state['opportunity_id']}" if st.session_state.get("opportunity_id") else "Unsaved opportunity"
-    st.caption(f"Opportunity: {st.session_state['file_name']} | Stage: {st.session_state['opportunity_stage']} | {saved_label}")
-    tab_titles = ["Dashboard", "Requirements", "Capability match", "Risks and decision", "Proposal support"]
-    if user_role == "Admin":
-        tab_titles.append("Admin & Analytics")
-    tab_objects = st.tabs(tab_titles)
-    dashboard_tab, requirements_tab, matching_tab, decision_tab, proposal_tab = tab_objects[:5]
-
-    with dashboard_tab:
-        if not recommendation:
-            st.info(
-                "👉 To generate the Bid / No-Bid intelligence and feasibility score, "
-                "click **'Run capability analysis'** in the sidebar. The system will compare requirements against your company profile.",
-                icon=":material/info:",
-            )
-        else:
-            score = recommendation.get("Score", 0)
-            signal = recommendation.get("Signal", "")
-            mandatory_total = recommendation.get("Mandatory Requirements", 0)
-            mandatory_gaps_cnt = recommendation.get("Mandatory Gaps", 0)
-            high_risks_cnt = recommendation.get("High Risks", 0)
-            items_verify_cnt = recommendation.get("Items to Verify", 0)
-
-            mandatory_gaps_list = [m for m in matches if m.get("Type") == "Mandatory" and m.get("Match Status") == "Gap"]
-            matched_list = [m for m in matches if m.get("Match Status") == "Match"]
-
-            # 1. Executive Verdict Card
-            with st.container(border=True):
-                st.subheader("🎯 Executive Bid / No-Bid Intelligence", anchor=False)
-                st.caption("AI Decision Support — Transparent analysis based on company capabilities, mandatory compliance, and contract risks.")
-
-                if "No-Bid" in signal or score < 70 or mandatory_gaps_cnt > 0:
-                    st.error(
-                        f"🛑 **RECOMMENDATION: NO-BID (High Disqualification Risk)**\n\n"
-                        f"**Core Reason:** {mandatory_gaps_cnt} mandatory requirement(s) have zero matching capability evidence in your company profile. "
-                        f"In enterprise/government tenders, failing a single mandatory specification causes automatic disqualification.",
-                        icon=":material/cancel:",
-                    )
-                else:
-                    st.success(
-                        f"🟢 **RECOMMENDATION: BID (Strong Alignment)**\n\n"
-                        f"**Core Reason:** Company capabilities meet all mandatory requirements with high confidence. Overall feasibility score is above threshold.",
-                        icon=":material/check_circle:",
-                    )
-
-                # 4 Key Scorecard Metrics
-                m_col1, m_col2, m_col3, m_col4 = st.columns(4)
-                with m_col1:
-                    st.metric(
-                        "Feasibility Score",
-                        f"{score} / 100",
-                        delta="Threshold: ≥ 70" if score >= 70 else "Below Threshold (< 70)",
-                        delta_color="normal" if score >= 70 else "inverse",
-                        help="Deduction-based score accounting for gaps, high risks, and verification items.",
-                    )
-                with m_col2:
-                    met_mandatory = mandatory_total - mandatory_gaps_cnt
-                    st.metric(
-                        "Mandatory Compliance",
-                        f"{met_mandatory} / {mandatory_total} Met",
-                        delta=f"{mandatory_gaps_cnt} Fatal Gaps" if mandatory_gaps_cnt > 0 else "100% Compliant",
-                        delta_color="inverse" if mandatory_gaps_cnt > 0 else "normal",
-                        help="Mandatory requirements met vs gaps without evidence.",
-                    )
-                with m_col3:
-                    st.metric(
-                        "High-Severity Risks",
-                        f"{high_risks_cnt} Risks",
-                        delta="Penalties / SLAs" if high_risks_cnt > 0 else "Low Risk",
-                        delta_color="inverse" if high_risks_cnt > 0 else "off",
-                        help="Open contractual penalties, tight deadlines, or missing certifications.",
-                    )
-                with m_col4:
-                    st.metric(
-                        "Items to Clarify",
-                        f"{items_verify_cnt} Items",
-                        delta="Clarification Queue",
-                        delta_color="off",
-                        help="Unclear requirements or procedural checks needing review.",
-                    )
-
-            # 2. Side-by-Side: Fatal Deal-Breakers vs. Core Strengths
-            col_gaps, col_strengths = st.columns(2)
-            with col_gaps:
-                with st.container(border=True):
-                    st.subheader("🚨 Fatal Deal-Breakers (Why No-Bid?)", anchor=False)
-                    st.caption("Mandatory requirements with ZERO supporting capability evidence:")
-                    if mandatory_gaps_list:
-                        for i, gap in enumerate(mandatory_gaps_list[:5], start=1):
-                            page_ref = f"Page {gap.get('Source Page')}" if gap.get('Source Page') else "Workbook"
-                            st.markdown(f"**{i}. [{gap.get('Category')}]** {gap.get('Requirement')}")
-                            st.caption(f"📍 *Source: {page_ref}* · ❌ *Missing from company profile*")
-                        if len(mandatory_gaps_list) > 5:
-                            st.caption(f"*(and {len(mandatory_gaps_list) - 5} more mandatory gaps)*")
-                    else:
-                        st.success("✅ Zero mandatory capability gaps! All mandatory criteria are supported.")
-
-            with col_strengths:
-                with st.container(border=True):
-                    st.subheader("✅ Company Strengths (Why Bid?)", anchor=False)
-                    st.caption("Tender requirements with strong capability matches:")
-                    if matched_list:
-                        for i, match in enumerate(matched_list[:5], start=1):
-                            page_ref = f"Page {match.get('Source Page')}" if match.get('Source Page') else "Workbook"
-                            st.markdown(f"**{i}. [{match.get('Category')}]** {match.get('Requirement')}")
-                            st.caption(f"📍 *Source: {page_ref}* · 🎯 *Evidence: {match.get('Capability Evidence')}*")
-                        if len(matched_list) > 5:
-                            st.caption(f"*(and {len(matched_list) - 5} more matching capabilities)*")
-                    else:
-                        st.info("No full capability matches found for current profile.")
-
-            # 3. Transparent Mathematical Breakdown & Actionable Path
-            with st.expander("🔢 How is the Feasibility Score Calculated? (Transparent Math)", expanded=False):
-                st.markdown(
-                    f"""
-                    The score is calculated via an auditable deduction formula (starts at 100):
-                    
-                    $$\\text{{Score}} = \\max\\Big(0, \\min\\big(100, 100 - (30 \\times G) - (10 \\times R) - (3 \\times V)\\big)\\Big)$$
-                    
-                    | Factor | Quantity | Penalty per item | Deduction | Impact |
-                    | :--- | :---: | :---: | :---: | :--- |
-                    | **Base Score** | - | - | **100** | Starting point |
-                    | **Mandatory Gaps ($G$)** | {mandatory_gaps_cnt} | -30 pts | **-{30 * mandatory_gaps_cnt}** | Fatal technical disqualification risk |
-                    | **High Risks ($R$)** | {high_risks_cnt} | -10 pts | **-{10 * high_risks_cnt}** | Liquidated damages, harsh SLAs, short deadlines |
-                    | **Verification Items ($V$)** | {items_verify_cnt} | -3 pts | **-{3 * items_verify_cnt}** | Unconfirmed scope, partial evidence |
-                    | **Final Score** | - | - | **{score} / 100** | **{'Below Threshold (< 70)' if score < 70 else 'Viable for Bid (≥ 70)'}** |
-                    """
-                )
-                if mandatory_gaps_cnt > 0:
-                    st.info(
-                        "💡 **How to turn this tender into a viable BID?**\n\n"
-                        "1. **Consortium / Subcontractor:** Partner with an entity that holds the missing certifications (e.g., ISO 27001).\n"
-                        "2. **Pre-Bid Query:** Request the client to accept equivalent ISO or industry experience during pre-bid meetings.\n"
-                        "3. **Update Capability Profile:** If your company actually has these capabilities, add them to the company profile text area in the sidebar and click **'Run capability analysis'** again.",
-                        icon=":material/lightbulb:",
-                    )
-
-            # 4. Human Decision Recording Gate
-            with st.container(border=True):
-                st.subheader("✍️ Record Human Bid / No-Bid Decision", anchor=False)
-                st.caption("AI produces recommendations. Company governance requires a human business user to record the final call.")
-
-                dec_col1, dec_col2 = st.columns([3, 2])
-                with dec_col1:
-                    decision_options = ["Pending human review", "Bid", "No-Bid", "Hold for clarification"]
-                    selected_decision = st.radio(
-                        "Select Decision",
-                        decision_options,
-                        index=decision_options.index(st.session_state["human_decision"]),
-                        key="decision_center_select",
-                        horizontal=True,
-                    )
-                    st.session_state["human_decision"] = selected_decision
-
-                    decision_notes = st.text_input(
-                        "Decision Justification / Reviewer Notes",
-                        value=st.session_state.get("decision_notes", ""),
-                        placeholder="e.g. Decided No-Bid due to ISO 27001 gap and harsh liquidated damages penalty.",
-                        key="decision_notes_input",
-                    )
-                    st.session_state["decision_notes"] = decision_notes
-
-                with dec_col2:
-                    if selected_decision == "Bid":
-                        st.success("Selected: **BID (Proceed with Proposal)**", icon=":material/check_circle:")
-                        st.caption("Proposal preparation work queue is now unlocked.")
-                        if st.button("Proceed to Proposal Authoring ➡️", type="primary", use_container_width=True):
-                            st.session_state["opportunity_stage"] = "Proposal"
-                            st.toast("Opportunity advanced to Proposal stage!", icon=":material/check_circle:")
-                            st.rerun()
-                    elif selected_decision == "No-Bid":
-                        st.error("Selected: **NO-BID (Decline Opportunity)**", icon=":material/cancel:")
-                        st.caption("Opportunity marked as declined to conserve team bandwidth.")
-                    elif selected_decision == "Hold for clarification":
-                        st.warning("Selected: **HOLD FOR CLARIFICATION**", icon=":material/pause_circle:")
-                        st.caption("Awaiting response on pre-bid clarification questions.")
-                    else:
-                        st.info("Status: **PENDING HUMAN REVIEW**", icon=":material/pending:")
-
-        category_counts = pd.Series([item["Category"] for item in requirements]).value_counts().rename_axis("Category").reset_index(name="Count")
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader("Requirements by category")
-            st.bar_chart(category_counts, x="Category", y="Count", alt="Requirements grouped by category")
-        with col2:
-            st.subheader("Risk register")
-            risk_counts = pd.Series([item["Risk Level"] for item in risks]).value_counts().rename_axis("Risk Level").reset_index(name="Count") if risks else pd.DataFrame({"Risk Level": [], "Count": []})
-            if risks:
-                st.bar_chart(risk_counts, x="Risk Level", y="Count", alt="Open risks by severity")
+            if not rec:
+                st.info("Run capability analysis from the left navigation to generate Bid / No-Bid intelligence.")
             else:
-                st.success("No risks generated yet. Run capability analysis to create the review register.")
-
-        saved_rows = list_opportunities()
-        if saved_rows:
-            st.subheader("Opportunity portfolio")
-            portfolio_df = pd.DataFrame(saved_rows).rename(columns={
-                "id": "Opportunity ID",
-                "file_name": "RFP file",
-                "stage": "Stage",
-                "human_decision": "Human decision",
-                "updated_at": "Last updated",
-            })
-            st.dataframe(
-                portfolio_df,
-                width="stretch",
-                hide_index=True,
-                alt="Saved RFP opportunity portfolio",
-            )
-
-    with requirements_tab:
+                score=rec.get("Score",0); signal=rec.get("Signal",""); mg=rec.get("Mandatory Gaps",0); mt=rec.get("Mandatory Requirements",0); hr=rec.get("High Risks",0); verify=rec.get("Items to Verify",0)
+                met=mt-mg
+                verdict="RECOMMENDATION: NO-BID" if ("No-Bid" in signal or score<70 or mg>0) else "RECOMMENDATION: BID"
+                col1,col2=st.columns([1.2,1])
+                with col1:
+                    st.markdown(f"<div class='rfp-panel pinkpanel'><h3>◎ &nbsp; AI Bid Intelligence <span class='rfp-verdict'>{safe(verdict)}</span></h3><div style='display:grid;grid-template-columns:1fr 1fr;gap:1rem'><div><div class='rfp-score'>{score} / 100</div><div>Feasibility Score</div><div class='rfp-scorebar'><span style='width:{max(0,min(100,score))}%'></span></div><div class='muted'>Evidence-based feasibility estimate</div></div><div style='border-left:1px solid #dedede;padding-left:1.1rem'><div style='margin:.35rem 0'>▱ &nbsp; <b>{met} / {mt} Met</b><br><span class='muted'>Mandatory Compliance</span></div><div style='margin:.65rem 0'>⚠ &nbsp; <b>{hr} Risks</b><br><span class='muted'>High-Severity Risks</span></div><div style='margin:.65rem 0'>▤ &nbsp; <b>{verify} Items</b><br><span class='muted'>Clarifications Needed</span></div></div></div></div>",unsafe_allow_html=True)
+                with col2:
+                    category_counts=pd.Series([m.get("Category","Other") for m in matches]).value_counts().head(5)
+                    st.markdown("<div class='rfp-panel bluepanel'><h3>▥ &nbsp; Requirements by Category</h3><div class='muted'>Extracted requirement distribution</div></div>",unsafe_allow_html=True)
+                    if not category_counts.empty: st.bar_chart(category_counts, height=190, color="#171717")
+                gaps=[m for m in matches if m.get("Type")=="Mandatory" and m.get("Match Status")=="Gap"]
+                strengths=[m for m in matches if m.get("Match Status")=="Match"]
+                a,b=st.columns(2)
+                with a:
+                    items="".join([f"<li>🔴 {safe(x.get('Requirement',''))[:230]}</li>" for x in gaps[:3]]) or "<li>No mandatory capability gaps identified.</li>"
+                    st.markdown(f"<div class='rfp-panel rfp-risk'><h3>⚠ &nbsp; Fatal Deal-Breakers (Why No-Bid?)</h3><ul>{items}</ul></div>",unsafe_allow_html=True)
+                with b:
+                    items="".join([f"<li>🟢 {safe(x.get('Requirement',''))[:230]}</li>" for x in strengths[:3]]) or "<li>No full capability matches found for the current profile.</li>"
+                    st.markdown(f"<div class='rfp-panel rfp-strength'><h3>✓ &nbsp; Company Strengths (Why Bid?)</h3><ul>{items}</ul></div>",unsafe_allow_html=True)
+                with st.expander("Record human Bid / No-Bid decision",expanded=True):
+                    decision=st.radio("Final decision",["Pending human review","Bid","No-Bid","Hold for clarification"],index=["Pending human review","Bid","No-Bid","Hold for clarification"].index(st.session_state["human_decision"]),horizontal=True,key="human_decision_radio")
+                    st.session_state["human_decision"]=decision
+                    st.session_state["decision_notes"]=st.text_input("Decision justification / reviewer notes",value=st.session_state.get("decision_notes",""),key="decision_notes_text")
+                    st.caption("AI recommendation is advisory. The final decision must be recorded by an authorised human reviewer.")
+    elif nav.startswith("▤"):
         st.subheader("Extracted requirements")
-        requirements_df = pd.DataFrame(requirements)
-        edited_df = st.data_editor(
-            requirements_df,
-            width="stretch",
-            hide_index=True,
-            num_rows="dynamic",
-            disabled=["Source Page"],
-            column_config={
-                "Type": st.column_config.SelectboxColumn(
-                    "Requirement type",
-                    options=["Mandatory", "Optional", "Needs Verification"],
-                    required=True,
-                ),
-                "Review Status": st.column_config.SelectboxColumn(
-                    "Review status",
-                    options=["Pending Review", "Verified", "Needs Clarification", "Rejected"],
-                    required=True,
-                ),
-                "Deadline": st.column_config.TextColumn(
-                    "Deadline / date",
-                    help="Extracted date or reviewer correction",
-                ),
-                "Evidence": st.column_config.TextColumn("Evidence", help="Attach a document, link, or evidence description."),
-                "Reviewer Notes": st.column_config.TextColumn("Reviewer notes", width="large"),
-            },
-            key="requirements_editor",
-        )
-        st.session_state["requirements"] = edited_df.to_dict("records")
-        st.download_button("Download requirements CSV", requirements_df.to_csv(index=False).encode("utf-8"), "rfp_requirements.csv", "text/csv", width="content")
-        with st.expander("Source document text"):
-            for page in st.session_state["pages"]:
-                st.markdown(f"**Page {page['page']}**")
-                st.text(page["text"])
-
-    with matching_tab:
+        if reqs:
+            df=pd.DataFrame(reqs); edited=st.data_editor(df,use_container_width=True,hide_index=True,num_rows="dynamic",disabled=["Source Page"] if "Source Page" in df.columns else [],column_config={"Type":st.column_config.SelectboxColumn("Requirement type",options=["Mandatory","Optional","Needs Verification"]),"Review Status":st.column_config.SelectboxColumn("Review status",options=["Pending Review","Verified","Needs Clarification","Rejected"]),"Reviewer Notes":st.column_config.TextColumn("Reviewer notes",width="large")},key="requirements_editor")
+            st.session_state["requirements"]=edited.to_dict("records")
+            st.download_button("Download requirements CSV",edited.to_csv(index=False).encode(),"rfp_requirements.csv","text/csv")
+            with st.expander("Source document text"):
+                for p in st.session_state["pages"]: st.markdown(f"**Page / Sheet {p.get('page','')}**"); st.text(p.get("text",""))
+        else: st.info("Upload and process an RFP to view extracted requirements.")
+    elif nav.startswith("◈"):
         st.subheader("Requirement-to-capability comparison")
-        if matches:
-            st.dataframe(pd.DataFrame(matches), width="stretch", hide_index=True, alt="Requirement capability matching results", column_config={"Match Score": st.column_config.ProgressColumn("Match score", min_value=0, max_value=100, format="%d%%")})
-        else:
-            st.warning("Run capability analysis from the sidebar to create matches and gaps.")
-
-    with decision_tab:
+        if matches: st.dataframe(pd.DataFrame(matches),use_container_width=True,hide_index=True,column_config={"Match Score":st.column_config.ProgressColumn("Match score",min_value=0,max_value=100,format="%d%%")})
+        else: st.info("Run capability analysis to create the requirement-to-response comparison.")
+    elif nav.startswith("⚠"):
         st.subheader("Risk Register & Contractual Exposure")
-        st.caption("Surfaces contractual liabilities, liquidated damages, tight milestones, and unverified obligations.")
-        if recommendation:
-            high_count = sum(r.get("Risk Level") == "High" for r in risks)
-            med_count = sum(r.get("Risk Level") == "Medium" for r in risks)
-            r_col1, r_col2, r_col3 = st.columns(3)
-            r_col1.metric("Total Open Risks", len(risks))
-            r_col2.metric("High-Severity Risks", high_count, delta="Immediate Mitigation Required" if high_count > 0 else "Clear", delta_color="inverse")
-            r_col3.metric("Medium-Severity Risks", med_count)
-
-            severity_filter = st.radio("Filter by Risk Level", ["All", "High", "Medium"], horizontal=True, key="risk_severity_filter")
-            filtered_risks = [r for r in risks if severity_filter == "All" or r.get("Risk Level") == severity_filter]
-
-            if filtered_risks:
-                st.dataframe(
-                    pd.DataFrame(filtered_risks),
-                    width="stretch",
-                    hide_index=True,
-                    alt="Open risk register",
-                    column_config={
-                        "Risk Level": st.column_config.TextColumn("Severity"),
-                        "Requirement": st.column_config.TextColumn("Clause / Requirement", width="large"),
-                        "Reason": st.column_config.TextColumn("Risk Cause", width="medium"),
-                        "Suggested Action": st.column_config.TextColumn("Recommended Mitigation", width="medium"),
-                        "Source Page": st.column_config.TextColumn("Source Page"),
-                    },
-                )
-            else:
-                st.info(f"No risks found matching severity '{severity_filter}'.")
-
-            st.download_button(
-                "Download full risk register CSV",
-                pd.DataFrame(risks).to_csv(index=False).encode("utf-8"),
-                "rfp_risk_register.csv",
-                "text/csv",
-                width="content",
-                icon=":material/download:",
-            )
-
-            if st.session_state["questions"]:
-                st.divider()
-                st.subheader("Pre-Bid Clarification Queue")
-                st.caption("Draft clarification questions to submit to the procuring authority before the clarification deadline:")
-                st.dataframe(pd.DataFrame(st.session_state["questions"]), width="stretch", hide_index=True, alt="Draft clarification questions")
-                st.download_button(
-                    "Download clarification questions CSV",
-                    pd.DataFrame(st.session_state["questions"]).to_csv(index=False).encode("utf-8"),
-                    "clarification_questions.csv",
-                    "text/csv",
-                    width="content",
-                    icon=":material/download:",
-                )
-        else:
-            st.info("Run capability analysis from the sidebar to generate the risk register and clarification queue.", icon=":material/info:")
-
-    with proposal_tab:
-        st.subheader("Proposal preparation work queue")
-        if st.session_state["human_decision"] != "Bid":
-            st.warning(
-                "Proposal preparation is locked until the human decision is Bid. Review requirements, risks, and the decision centre first.",
-                icon=":material/lock:",
-            )
-        else:
-            st.info(
-                "Use the draft as a starting point only. Assign an owner, add evidence, edit the response, and mark it approved before submission.",
-                icon=":material/edit_document:",
-            )
-        if st.session_state["human_decision"] == "Bid" and st.session_state["proposal"]:
-            proposal_df = pd.DataFrame(st.session_state["proposal"])
-            edited_proposal = st.data_editor(
-                proposal_df,
-                width="stretch",
-                hide_index=True,
-                num_rows="dynamic",
-                disabled=["Source Page"],
-                column_config={
-                    "Response Owner": st.column_config.TextColumn("Response owner", required=True),
-                    "Response Status": st.column_config.SelectboxColumn(
-                        "Response status",
-                        options=["Not Started", "In Progress", "Ready for Review", "Complete"],
-                        required=True,
-                    ),
-                    "Draft Response": st.column_config.TextColumn("Draft response", width="large"),
-                    "Human Approval": st.column_config.SelectboxColumn(
-                        "Human approval",
-                        options=["Not Reviewed", "Approved", "Needs Changes", "Rejected"],
-                        required=True,
-                    ),
-                },
-                key="proposal_editor",
-            )
-            st.session_state["proposal"] = edited_proposal.to_dict("records")
-            st.download_button(
-                "Download proposal work queue",
-                edited_proposal.to_csv(index=False).encode("utf-8"),
-                "proposal_work_queue.csv",
-                "text/csv",
-                width="content",
-                icon=":material/download:",
-            )
-        else:
-            st.info("Run capability analysis to create the requirement-to-response queue.")
+        if risks:
+            high=sum(x.get("Risk Level")=="High" for x in risks); med=sum(x.get("Risk Level")=="Medium" for x in risks)
+            c1,c2,c3=st.columns(3); c1.metric("Total Open Risks",len(risks)); c2.metric("High-Severity Risks",high); c3.metric("Medium-Severity Risks",med)
+            level=st.radio("Filter by risk level",["All","High","Medium"],horizontal=True); shown=[x for x in risks if level=="All" or x.get("Risk Level")==level]
+            st.dataframe(pd.DataFrame(shown),use_container_width=True,hide_index=True)
+            st.download_button("Download full risk register CSV",pd.DataFrame(risks).to_csv(index=False).encode(),"rfp_risk_register.csv","text/csv")
+        else: st.info("Run capability analysis to generate the risk register.")
         if st.session_state["questions"]:
-            st.subheader("Clarification questions")
-            st.dataframe(pd.DataFrame(st.session_state["questions"]), width="stretch", hide_index=True, alt="Draft clarification questions")
+            st.subheader("Pre-Bid Clarification Queue"); st.dataframe(pd.DataFrame(st.session_state["questions"]),use_container_width=True,hide_index=True)
+            st.download_button("Download clarification questions CSV",pd.DataFrame(st.session_state["questions"]).to_csv(index=False).encode(),"clarification_questions.csv","text/csv")
+    elif nav.startswith("◎"):
+        st.subheader("Human Decision Centre")
+        st.info("AI analysis supports the reviewer; it does not make the final business decision.")
+        decision=st.radio("Record final decision",["Pending human review","Bid","No-Bid","Hold for clarification"],index=["Pending human review","Bid","No-Bid","Hold for clarification"].index(st.session_state["human_decision"]),horizontal=True,key="decision_page_radio")
+        st.session_state["human_decision"]=decision
+        st.session_state["decision_notes"]=st.text_area("Decision justification / reviewer notes",value=st.session_state.get("decision_notes",""),key="decision_page_notes")
+        if decision=="Bid": st.success("Bid selected. Proposal support is unlocked.")
+        elif decision=="No-Bid": st.error("No-Bid selected. Opportunity marked as declined.")
+        else: st.warning("Decision is awaiting final review.")
+    elif nav.startswith("▣"):
+        st.subheader("Proposal preparation work queue")
+        if st.session_state["human_decision"]!="Bid": st.warning("Proposal preparation is locked until the human decision is Bid.")
+        elif st.session_state["proposal"]:
+            df=pd.DataFrame(st.session_state["proposal"]); edited=st.data_editor(df,use_container_width=True,hide_index=True,num_rows="dynamic",key="proposal_editor"); st.session_state["proposal"]=edited.to_dict("records")
+            st.download_button("Download proposal work queue",edited.to_csv(index=False).encode(),"proposal_work_queue.csv","text/csv")
+        else: st.info("Run capability analysis to create the requirement-to-response queue.")
+        if st.session_state["questions"]: st.subheader("Clarification questions"); st.dataframe(pd.DataFrame(st.session_state["questions"]),use_container_width=True,hide_index=True)
+    elif nav.startswith("▦"):
+        st.subheader("Opportunity portfolio")
+        saved=list_opportunities()
+        if saved:
+            df=pd.DataFrame(saved).rename(columns={"id":"Opportunity ID","file_name":"RFP file","stage":"Stage","human_decision":"Human decision","updated_at":"Last updated"})
+            st.dataframe(df,use_container_width=True,hide_index=True)
+        else: st.info("No saved opportunities yet. Process and save an RFP to populate the portfolio.")
 
-    if user_role == "Admin" and len(tab_objects) > 5:
-        with tab_objects[5]:
-            st.subheader("Admin & Portfolio Analytics")
-            st.caption("Cross-opportunity tracking and organizational performance metrics.")
-            saved_all = list_opportunities()
-            if saved_all:
-                port_df = pd.DataFrame(saved_all)
-                ac1, ac2, ac3, ac4 = st.columns(4)
-                ac1.metric("Total Opportunities", len(port_df))
-                won_n = sum(port_df["stage"] == "Won")
-                lost_n = sum(port_df["stage"] == "Lost")
-                win_pct = f"{(won_n / (won_n + lost_n) * 100):.1f}%" if (won_n + lost_n) > 0 else "N/A"
-                ac2.metric("Won Opportunities", won_n)
-                ac3.metric("Lost Opportunities", lost_n)
-                ac4.metric("Win Rate", win_pct)
-
-                sc1, sc2 = st.columns(2)
-                with sc1:
-                    st.subheader("Opportunities by Stage")
-                    stage_s = port_df["stage"].value_counts().rename_axis("Stage").reset_index(name="Count")
-                    st.bar_chart(stage_s, x="Stage", y="Count")
-                with sc2:
-                    st.subheader("Decisions Summary")
-                    dec_s = port_df["human_decision"].value_counts().rename_axis("Decision").reset_index(name="Count")
-                    st.bar_chart(dec_s, x="Decision", y="Count")
-            else:
-                st.info("No saved opportunities recorded in the portfolio yet.")
+if __name__=="__main__": main()
