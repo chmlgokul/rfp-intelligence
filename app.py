@@ -145,6 +145,13 @@ html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f
 .rfp-panel.pinkpanel{border-left-color:#171717;background:#fff}
 .rfp-panel.bluepanel{border-left-color:#555;background:#fff;min-height:155px}
 .rfp-verdict{display:inline-block;background:#ededed;border:1px solid #d5d5d5;color:#171717;padding:.25rem .6rem;border-radius:30px;font-size:.72rem;font-weight:800;vertical-align:middle}
+.rfp-verdict.bid{background:#e7f6ec!important;border-color:#8bc99d!important;color:#137333!important}
+.rfp-verdict.review{background:#fff3df!important;border-color:#e9bd72!important;color:#9a5b00!important}
+.rfp-verdict.no-bid{background:#fdeaea!important;border-color:#e5a0a0!important;color:#b42318!important}
+.rfp-score.bid{color:#137333!important}.rfp-score.review{color:#b7791f!important}.rfp-score.no-bid{color:#b42318!important}
+.rfp-scorebar.bid span{background:#16803c!important}.rfp-scorebar.review span{background:#d99016!important}.rfp-scorebar.no-bid span{background:#c62828!important}
+.rfp-recommendation-note{font-size:.82rem;font-weight:600;margin-top:.35rem}
+.rfp-recommendation-note.bid{color:#137333!important}.rfp-recommendation-note.review{color:#9a5b00!important}.rfp-recommendation-note.no-bid{color:#b42318!important}
 .rfp-score{font-size:2.5rem;font-weight:800;letter-spacing:-.05em;color:#111;margin:.4rem 0}
 .rfp-scorebar{height:10px;border-radius:20px;background:#e8e8e8;overflow:hidden;margin:.8rem 0}
 .rfp-scorebar span{display:block;height:100%;background:#171717;border-radius:20px}
@@ -285,10 +292,23 @@ def main():
             else:
                 score=rec.get("Score",0); signal=rec.get("Signal",""); mg=rec.get("Mandatory Gaps",0); mt=rec.get("Mandatory Requirements",0); hr=rec.get("High Risks",0); verify=rec.get("Items to Verify",0)
                 met=mt-mg
-                verdict="RECOMMENDATION: NO-BID" if ("No-Bid" in signal or score<70 or mg>0) else "RECOMMENDATION: BID"
+                # Three-state advisory: mandatory gaps override the score.
+                # Green = Bid, Orange = Review, Red = No-Bid.
+                if mg > 0 or "No-Bid" in signal:
+                    verdict = "RECOMMENDATION: NO-BID"
+                    verdict_class = "no-bid"
+                    recommendation_note = "Mandatory requirement gap detected — do not bid unless the gap is resolved."
+                elif score >= 70:
+                    verdict = "RECOMMENDATION: BID"
+                    verdict_class = "bid"
+                    recommendation_note = "Good capability alignment — suitable to proceed to human bid review."
+                else:
+                    verdict = "RECOMMENDATION: REVIEW"
+                    verdict_class = "review"
+                    recommendation_note = "Partial / incomplete evidence — clarify gaps and risks before deciding."
                 col1,col2=st.columns([1.2,1])
                 with col1:
-                    st.markdown(f"<div class='rfp-panel pinkpanel'><h3>◎ &nbsp; AI Bid Intelligence <span class='rfp-verdict'>{safe(verdict)}</span></h3><div style='display:grid;grid-template-columns:1fr 1fr;gap:1rem'><div><div class='rfp-score'>{score} / 100</div><div>Feasibility Score</div><div class='rfp-scorebar'><span style='width:{max(0,min(100,score))}%'></span></div><div class='muted'>Evidence-based feasibility estimate</div></div><div style='border-left:1px solid #dedede;padding-left:1.1rem'><div style='margin:.35rem 0'>▱ &nbsp; <b>{met} / {mt} Met</b><br><span class='muted'>Mandatory Compliance</span></div><div style='margin:.65rem 0'>⚠ &nbsp; <b>{hr} Risks</b><br><span class='muted'>High-Severity Risks</span></div><div style='margin:.65rem 0'>▤ &nbsp; <b>{verify} Items</b><br><span class='muted'>Clarifications Needed</span></div></div></div></div>",unsafe_allow_html=True)
+                    st.markdown(f"<div class='rfp-panel pinkpanel'><h3>◎ &nbsp; AI Bid Intelligence <span class='rfp-verdict {verdict_class}'>{safe(verdict)}</span></h3><div style='display:grid;grid-template-columns:1fr 1fr;gap:1rem'><div><div class='rfp-score {verdict_class}'>{score} / 100</div><div>Feasibility Score</div><div class='rfp-scorebar {verdict_class}'><span style='width:{max(0,min(100,score))}%'></span></div><div class='muted'>Evidence-based feasibility estimate</div><div class='rfp-recommendation-note {verdict_class}'>{safe(recommendation_note)}</div></div><div style='border-left:1px solid #dedede;padding-left:1.1rem'><div style='margin:.35rem 0'>▱ &nbsp; <b>{met} / {mt} Met</b><br><span class='muted'>Mandatory Compliance</span></div><div style='margin:.65rem 0'>⚠ &nbsp; <b>{hr} Risks</b><br><span class='muted'>High-Severity Risks</span></div><div style='margin:.65rem 0'>▤ &nbsp; <b>{verify} Items</b><br><span class='muted'>Clarifications Needed</span></div></div></div></div>",unsafe_allow_html=True)
                 with col2:
                     category_counts=pd.Series([m.get("Category","Other") for m in matches]).value_counts().head(5)
                     st.markdown("<div class='rfp-panel bluepanel'><h3>▥ &nbsp; Requirements by Category</h3><div class='muted'>Extracted requirement distribution</div></div>",unsafe_allow_html=True)
