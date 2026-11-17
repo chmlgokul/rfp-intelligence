@@ -75,6 +75,22 @@ html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div{color:#111!important;-webkit-text-fill-color:#111!important}
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] svg{fill:#111!important;color:#111!important}
+/* Strong, version-tolerant fix for selected dropdown values in the sidebar. */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"],
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"] *,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="value"],
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="value"] *,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] input {
+    color:#111111!important;
+    -webkit-text-fill-color:#111111!important;
+    opacity:1!important;
+}
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"] {
+    background:#f4f4f4!important;
+    border-radius:8px!important;
+}
 /* Streamlit renders dropdown menus in a portal outside the sidebar. */
 [data-baseweb="popover"] [role="listbox"],
 [data-baseweb="popover"] [role="option"],
