@@ -22,76 +22,74 @@ st.set_page_config(page_title="RFP Intelligence", page_icon="◈", layout="wide"
 
 st.markdown(r"""
 <style>
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-:root{--ink:#171717;--muted:#6b7280;--line:#dedede;--soft:#f6f6f6;--white:#ffffff;--black:#111111}
+:root{--ink:#171717;--muted:#6b7280;--line:#dedede;--soft:#f6f6f6;--white:#fff;--black:#111}
 html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f3f4f5!important;color:var(--ink)!important;font-family:Inter,Arial,sans-serif!important}
 [data-testid="stHeader"]{background:rgba(255,255,255,.96)!important;border-bottom:1px solid #e7e7e7}
 [data-testid="stMain"]{background:#f3f4f5!important}
 [data-testid="stMainBlockContainer"],.main .block-container{max-width:1600px!important;padding:1.35rem 1.65rem 3rem!important}
-/* Dark, compact navigation rail */
+
+/* Sidebar */
 [data-testid="stSidebar"]{background:#151515!important;border-right:1px solid #303030!important}
 [data-testid="stSidebar"]>div:first-child{background:transparent!important}
-[data-testid="stSidebar"] *{color:#f5f5f5!important}
-/* Keep sidebar labels light, but force dark text inside light action buttons. */
-[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p{font-weight:650!important;color:#e9e9e9!important}
-[data-testid="stSidebar"] .stButton > button,
-[data-testid="stSidebar"] .stDownloadButton > button,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] button{
-    background:#f4f4f4!important;
-    color:#111111!important;
-    border:1px solid #d0d0d0!important;
-    border-radius:8px!important;
-    font-weight:650!important;
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"],
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] *,
+[data-testid="stSidebar"] .stMarkdown,[data-testid="stSidebar"] .stMarkdown *,
+[data-testid="stSidebar"] .stCaption,[data-testid="stSidebar"] .stCaption *,
+[data-testid="stSidebar"] .stSubheader,[data-testid="stSidebar"] .stSubheader *{color:#f5f5f5!important}
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p{font-weight:650!important}
+
+/* Sidebar action buttons */
+[data-testid="stSidebar"] .stButton button,
+[data-testid="stSidebar"] .stDownloadButton button{
+ background:#f4f4f4!important;color:#111!important;border:1px solid #d0d0d0!important;
+ border-radius:8px!important;font-weight:650!important;min-height:2.35rem!important;opacity:1!important
 }
-[data-testid="stSidebar"] .stButton > button *,
-[data-testid="stSidebar"] .stDownloadButton > button *,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] button *{
-    color:#111111!important;
-    fill:#111111!important;
-}
-[data-testid="stSidebar"] .stButton > button:hover,
-[data-testid="stSidebar"] .stDownloadButton > button:hover,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] button:hover{
-    background:#dedede!important;
-    border-color:#bdbdbd!important;
-    color:#111111!important;
-}
+[data-testid="stSidebar"] .stButton button *,
+[data-testid="stSidebar"] .stDownloadButton button *{color:#111!important;-webkit-text-fill-color:#111!important;fill:#111!important}
+[data-testid="stSidebar"] .stButton button:hover,
+[data-testid="stSidebar"] .stDownloadButton button:hover{background:#dedede!important;border-color:#bdbdbd!important}
+[data-testid="stSidebar"] .stButton button:disabled,
+[data-testid="stSidebar"] .stDownloadButton button:disabled{background:#3a3a3a!important;border-color:#555!important;color:#bdbdbd!important;opacity:1!important}
+[data-testid="stSidebar"] .stButton button:disabled *,
+[data-testid="stSidebar"] .stDownloadButton button:disabled *{color:#bdbdbd!important;-webkit-text-fill-color:#bdbdbd!important}
+
+/* Upload area and uploaded file row */
+[data-testid="stSidebar"] [data-testid="stFileUploader"],
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section{background:#202020!important;color:#f5f5f5!important;border-radius:10px!important}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section{border:1px dashed #888!important}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section *,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] small,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] p,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] span{color:#f5f5f5!important;-webkit-text-fill-color:#f5f5f5!important}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button{background:#f4f4f4!important;color:#111!important;border:1px solid #d0d0d0!important;border-radius:8px!important}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button *,
 [data-testid="stSidebar"] [data-testid="stFileUploader"] button p,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] button span,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] button div{
-    color:#111111!important;
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button span{color:#111!important;-webkit-text-fill-color:#111!important;fill:#111!important}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"],
+[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] *{
+ background:#f4f4f4!important;color:#171717!important;-webkit-text-fill-color:#171717!important
 }
-[data-testid="stSidebar"] [data-testid="stRadio"] label{padding:.48rem .62rem;border-radius:8px;border:1px solid transparent}
-[data-testid="stSidebar"] [data-testid="stRadio"] label:hover{background:#292929;border-color:#444}
-[data-testid="stSidebar"] [data-testid="stRadio"] [aria-checked="true"]{background:#303030;border-color:#777}
-[data-testid="stSidebar"] .stButton>button,[data-testid="stSidebar"] .stDownloadButton>button{background:#f4f4f4!important;border:1px solid #f4f4f4!important;color:#111!important;border-radius:8px!important;font-weight:650!important}
-[data-testid="stSidebar"] .stButton>button:hover,[data-testid="stSidebar"] .stDownloadButton>button:hover{background:#dedede!important;border-color:#dedede!important;color:#111!important}
-[data-testid="stSidebar"] [data-testid="stFileUploader"] section{background:#202020!important;border:1px dashed #777!important;border-radius:10px!important}
-/* Sidebar text area stays dark; select controls use a light surface with dark text. */
-[data-testid="stSidebar"] [data-testid="stTextArea"] textarea{background:#242424!important;color:#fff!important;border:1px solid #555!important}
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div{background:#f4f4f4!important;border:1px solid #cfcfcf!important;color:#111!important}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] button,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] button *{
+ color:#171717!important;-webkit-text-fill-color:#171717!important;fill:#171717!important
+}
+
+/* Selectbox value and dropdown menu */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div{
+ background:#f4f4f4!important;border:1px solid #cfcfcf!important;border-radius:8px!important
+}
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div{color:#111!important;-webkit-text-fill-color:#111!important}
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] svg{fill:#111!important;color:#111!important}
-/* Strong, version-tolerant fix for selected dropdown values in the sidebar. */
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"],
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"] *,
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="value"],
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="value"] *,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] input {
-    color:#111111!important;
-    -webkit-text-fill-color:#111111!important;
-    opacity:1!important;
+[data-testid="stSidebar"] [data-testid="stSelectbox"] input{
+ color:#111!important;-webkit-text-fill-color:#111!important;opacity:1!important
 }
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"] {
-    background:#f4f4f4!important;
-    border-radius:8px!important;
-}
-/* Streamlit renders dropdown menus in a portal outside the sidebar. */
+[data-testid="stSidebar"] [data-testid="stSelectbox"] svg{color:#111!important;fill:#111!important}
 [data-baseweb="popover"] [role="listbox"],
 [data-baseweb="popover"] [role="option"],
 [data-baseweb="popover"] [role="option"] *,
@@ -99,7 +97,20 @@ html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f
 [data-baseweb="menu"] [role="option"] *{color:#171717!important;-webkit-text-fill-color:#171717!important}
 [data-baseweb="popover"] [role="option"]{background:#fff!important}
 [data-baseweb="popover"] [role="option"][aria-selected="true"]{background:#ededed!important}
-/* Header and hero */
+
+/* Sidebar text area, radios and expanders */
+[data-testid="stSidebar"] [data-testid="stTextArea"] textarea{
+ background:#242424!important;color:#fff!important;-webkit-text-fill-color:#fff!important;border:1px solid #666!important;border-radius:8px!important
+}
+[data-testid="stSidebar"] [data-testid="stTextArea"] textarea::placeholder{color:#bdbdbd!important}
+[data-testid="stSidebar"] [data-testid="stRadio"] label{color:#f5f5f5!important;padding:.48rem .62rem;border-radius:8px;border:1px solid transparent}
+[data-testid="stSidebar"] [data-testid="stRadio"] label *{color:#f5f5f5!important}
+[data-testid="stSidebar"] [data-testid="stRadio"] label:hover{background:#292929;border-color:#444}
+[data-testid="stSidebar"] [data-testid="stRadio"] [aria-checked="true"]{background:#303030;border-color:#777}
+[data-testid="stSidebar"] [data-testid="stExpander"] summary,
+[data-testid="stSidebar"] [data-testid="stExpander"] summary *{color:#f5f5f5!important}
+
+/* Existing monochrome dashboard layout */
 .rfp-topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:.35rem .25rem 1rem;border-bottom:1px solid #dedede;margin-bottom:1.15rem}
 .rfp-brand{font-size:1.2rem;font-weight:800;letter-spacing:-.035em;color:#111}
 .rfp-brand span{color:#555}
@@ -110,7 +121,6 @@ html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f
 .rfp-hero h1 span{color:#555}
 .rfp-hero p{position:relative;color:#6b7280!important;margin:.15rem 0 0;font-size:.95rem}
 .rfp-stage-pill{position:absolute;right:1.4rem;top:1.15rem;z-index:2;border:1px solid #d8d8d8;border-radius:10px;padding:.6rem .85rem;background:#f7f7f7;color:#222;font-weight:700;min-width:145px}
-/* Simple four-step workflow */
 .rfp-workflow{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;position:relative;background:#fff;border:1px solid #dedede;border-radius:14px;padding:1rem 1.15rem .85rem;margin:1.05rem 0 1.35rem;box-shadow:0 4px 14px rgba(0,0,0,.025)}
 .rfp-step{display:flex;gap:10px;align-items:flex-start;min-width:0}
 .rfp-stepnum{flex:0 0 34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.95rem;background:#ededed;border:1px solid #d5d5d5;color:#222}
@@ -120,7 +130,6 @@ html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f
 .rfp-flowbar{grid-column:1/-1;height:6px;border-radius:20px;background:#e8e8e8;overflow:hidden;margin:.15rem .15rem 0}
 .rfp-flowbar span{display:block;height:100%;border-radius:20px;background:#171717;transition:width .35s ease}
 .rfp-section-title{font-size:1.2rem;font-weight:800;color:#171717;margin:.65rem 0 .8rem;letter-spacing:-.025em}
-/* Six consistent monochrome KPI cards */
 .rfp-kpis{display:grid;grid-template-columns:repeat(5,minmax(115px,1fr)) minmax(220px,1.55fr);gap:12px;margin-bottom:.7rem}
 .rfp-kpi{position:relative;overflow:hidden;min-height:112px;padding:.95rem 1rem;border-radius:12px;color:#171717;border:1px solid #dedede;border-top:3px solid #171717;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.035);transition:transform .18s ease,box-shadow .18s ease;animation:fadein .3s ease both}
 .rfp-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.07)}
@@ -129,32 +138,32 @@ html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f
 .rfp-kpi .val{font-size:1.85rem;line-height:1.2;font-weight:800;color:#111;margin-top:.2rem;letter-spacing:-.04em}
 .rfp-kpi.decision .val{font-size:1.18rem;letter-spacing:-.02em;margin-top:.55rem}
 .rfp-kpi.cyan,.rfp-kpi.purple,.rfp-kpi.amber,.rfp-kpi.green,.rfp-kpi.pink,.rfp-kpi.teal{--a:#fff;--b:#fff;--edge:#171717;--glow:rgba(0,0,0,.04)}
-/* Analysis panels */
-.rfp-panel{border-radius:14px;padding:1.15rem 1.25rem;border:1px solid #dcdcdc;border-left:4px solid #222;background:#fff;box-shadow:0 4px 15px rgba(0,0,0,.035);color:#222;min-height:210px;animation:fadein .35s ease both}
-.rfp-panel h3{color:#171717!important;font-size:1.1rem!important;margin:0 0 .85rem!important}
-.rfp-panel p,.rfp-panel li{color:#333!important}
-.rfp-panel .muted{color:#777;font-size:.8rem}
-.rfp-panel.pinkpanel,.rfp-panel.bluepanel,.rfp-panel.rfp-risk,.rfp-panel.rfp-strength{--a:#fff;--b:#fff;--edge:#222;--glow:rgba(0,0,0,.04);background:#fff;border-color:#ddd;border-left-color:#222}
-.rfp-score{font-size:2.45rem;font-weight:800;letter-spacing:-.04em;color:#111}
-.rfp-scorebar{height:9px;border-radius:20px;background:#e7e7e7;overflow:hidden;margin:.7rem 0}
-.rfp-scorebar span{display:block;height:100%;border-radius:20px;background:#171717}
-.rfp-verdict{display:inline-block;padding:.3rem .65rem;border-radius:6px;background:#171717;border:1px solid #171717;font-size:.74rem;font-weight:750;color:#fff;margin-left:.5rem}
-.rfp-two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:1rem 0}
-/* Streamlit widgets */
-[data-testid="stTabs"] [role="tablist"]{gap:8px;border-bottom:1px solid #ddd}
-[data-testid="stTabs"] button[role="tab"]{color:#666!important;border-radius:8px 8px 0 0;padding:.62rem .8rem;font-weight:650}
-[data-testid="stTabs"] button[aria-selected="true"]{color:#111!important;background:#f0f0f0!important;border-bottom:3px solid #111!important}
-[data-testid="stTabs"] button p{color:inherit!important}
-[data-testid="stMetric"]{background:#fff!important;border:1px solid #ddd!important;border-radius:11px!important;padding:.8rem!important}
+.rfp-panel{border-radius:14px;padding:1.15rem 1.25rem;border:1px solid #dcdcdc;border-left:4px solid #222;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.025);margin-bottom:1rem}
+.rfp-panel h3{color:#171717!important;font-size:1.08rem!important;font-weight:800!important;margin:0 0 .8rem!important}
+.rfp-panel p,.rfp-panel li{color:#333;line-height:1.55}
+.rfp-panel .muted{color:#777;font-size:.85rem}
+.rfp-panel.pinkpanel{border-left-color:#171717;background:#fff}
+.rfp-panel.bluepanel{border-left-color:#555;background:#fff;min-height:155px}
+.rfp-verdict{display:inline-block;background:#ededed;border:1px solid #d5d5d5;color:#171717;padding:.25rem .6rem;border-radius:30px;font-size:.72rem;font-weight:800;vertical-align:middle}
+.rfp-score{font-size:2.5rem;font-weight:800;letter-spacing:-.05em;color:#111;margin:.4rem 0}
+.rfp-scorebar{height:10px;border-radius:20px;background:#e8e8e8;overflow:hidden;margin:.8rem 0}
+.rfp-scorebar span{display:block;height:100%;background:#171717;border-radius:20px}
+.rfp-risk{border-left-color:#555}.rfp-strength{border-left-color:#999}
+.rfp-two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+[data-testid="stMetric"]{background:#fff;border:1px solid #ddd;border-radius:12px;padding:.8rem!important}
 [data-testid="stMetricLabel"],[data-testid="stMetricLabel"] p,[data-testid="stMetricValue"],[data-testid="stMetricValue"] div{color:#171717!important}
 [data-testid="stVerticalBlockBorderWrapper"]{background:#fff!important;border:1px solid #ddd!important;border-radius:13px!important;box-shadow:0 4px 14px rgba(0,0,0,.025)!important}
-.stButton>button,.stDownloadButton>button{border-radius:8px!important;border:1px solid #171717!important;background:#171717!important;color:#fff!important;font-weight:650!important;transition:all .18s ease!important}
-.stButton>button:hover,.stDownloadButton>button:hover{background:#3b3b3b!important;border-color:#3b3b3b!important;transform:translateY(-1px)}
-.stButton>button[kind="primary"]{background:#111!important;border:1px solid #111!important;color:#fff!important}
-.stTextInput input,.stTextArea textarea,.stSelectbox div[data-baseweb="select"],.stMultiSelect div[data-baseweb="select"]{background:#fff!important;color:#171717!important;border:1px solid #d0d0d0!important;border-radius:8px!important}
-.stSelectbox [data-baseweb="select"] *, .stMultiSelect [data-baseweb="select"] *{color:#171717!important;-webkit-text-fill-color:#171717!important}
-.stSelectbox [data-baseweb="select"] svg,.stMultiSelect [data-baseweb="select"] svg{fill:#171717!important;color:#171717!important}
-.stTextInput input::placeholder,.stTextArea textarea::placeholder{color:#888!important}
+
+/* Main buttons and form widgets */
+.stButton button,.stDownloadButton button{border-radius:8px!important;border:1px solid #171717!important;background:#171717!important;color:#fff!important;font-weight:650!important;transition:all .18s ease!important}
+.stButton button *, .stDownloadButton button *{color:#fff!important;-webkit-text-fill-color:#fff!important}
+.stButton button:hover,.stDownloadButton button:hover{background:#3b3b3b!important;border-color:#3b3b3b!important;transform:translateY(-1px)}
+.stButton button:disabled,.stDownloadButton button:disabled{background:#e5e5e5!important;border-color:#d0d0d0!important;color:#777!important;opacity:1!important}
+.stButton button:disabled *,.stDownloadButton button:disabled *{color:#777!important;-webkit-text-fill-color:#777!important}
+.stTextInput input,.stTextArea textarea,[data-testid="stSelectbox"] [data-baseweb="select"] > div,[data-testid="stMultiSelect"] [data-baseweb="select"] > div{background:#fff!important;color:#171717!important;-webkit-text-fill-color:#171717!important;border:1px solid #d0d0d0!important;border-radius:8px!important}
+[data-testid="stSelectbox"] [data-baseweb="select"] *,[data-testid="stMultiSelect"] [data-baseweb="select"] *,[data-testid="stSelectbox"] input,[data-testid="stMultiSelect"] input{color:#171717!important;-webkit-text-fill-color:#171717!important;opacity:1!important}
+[data-testid="stSelectbox"] svg,[data-testid="stMultiSelect"] svg{fill:#171717!important;color:#171717!important}
+.stTextInput input::placeholder,.stTextArea textarea::placeholder{color:#888!important;-webkit-text-fill-color:#888!important}
 [data-testid="stDataFrame"],[data-testid="stDataEditor"]{border:1px solid #ddd;border-radius:10px;overflow:hidden}
 [data-testid="stAlert"]{border-radius:10px!important}
 [data-testid="stCaptionContainer"] p{color:#777!important}
@@ -163,6 +172,7 @@ hr{border-color:#e2e2e2!important}
 @media(max-width:1050px){.rfp-kpis{grid-template-columns:repeat(3,1fr)}.rfp-workflow{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:650px){[data-testid="stMainBlockContainer"],.main .block-container{padding:.65rem .65rem 2rem!important}.rfp-kpis{grid-template-columns:repeat(2,1fr)}.rfp-two-col{grid-template-columns:1fr}.rfp-stage-pill{position:relative;right:auto;top:auto;margin-top:.8rem;display:inline-block}.rfp-workflow{grid-template-columns:1fr}.rfp-topbar{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
 </style>
 """, unsafe_allow_html=True)
 
