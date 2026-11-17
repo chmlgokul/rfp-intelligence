@@ -32,12 +32,40 @@ html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f
 [data-testid="stSidebar"]{background:#151515!important;border-right:1px solid #303030!important}
 [data-testid="stSidebar"]>div:first-child{background:transparent!important}
 [data-testid="stSidebar"] *{color:#f5f5f5!important}
+/* Keep sidebar labels light, but force dark text inside light action buttons. */
 [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p{font-weight:650!important;color:#e9e9e9!important}
+[data-testid="stSidebar"] .stButton > button,
+[data-testid="stSidebar"] .stDownloadButton > button,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button{
+    background:#f4f4f4!important;
+    color:#111111!important;
+    border:1px solid #d0d0d0!important;
+    border-radius:8px!important;
+    font-weight:650!important;
+}
+[data-testid="stSidebar"] .stButton > button *,
+[data-testid="stSidebar"] .stDownloadButton > button *,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button *{
+    color:#111111!important;
+    fill:#111111!important;
+}
+[data-testid="stSidebar"] .stButton > button:hover,
+[data-testid="stSidebar"] .stDownloadButton > button:hover,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button:hover{
+    background:#dedede!important;
+    border-color:#bdbdbd!important;
+    color:#111111!important;
+}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button p,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button span,
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button div{
+    color:#111111!important;
+}
 [data-testid="stSidebar"] [data-testid="stRadio"] label{padding:.48rem .62rem;border-radius:8px;border:1px solid transparent}
 [data-testid="stSidebar"] [data-testid="stRadio"] label:hover{background:#292929;border-color:#444}
 [data-testid="stSidebar"] [data-testid="stRadio"] [aria-checked="true"]{background:#303030;border-color:#777}
 [data-testid="stSidebar"] .stButton>button,[data-testid="stSidebar"] .stDownloadButton>button{background:#f4f4f4!important;border:1px solid #f4f4f4!important;color:#111!important;border-radius:8px!important;font-weight:650!important}
-[data-testid="stSidebar"] .stButton>button:hover,[data-testid="stSidebar"] .stDownloadButton>button:hover{background:#dedede!important;border-color:#dedede!important}
+[data-testid="stSidebar"] .stButton>button:hover,[data-testid="stSidebar"] .stDownloadButton>button:hover{background:#dedede!important;border-color:#dedede!important;color:#111!important}
 [data-testid="stSidebar"] [data-testid="stFileUploader"] section{background:#202020!important;border:1px dashed #777!important;border-radius:10px!important}
 [data-testid="stSidebar"] [data-testid="stTextArea"] textarea,[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"]{background:#242424!important;color:#fff!important;border:1px solid #555!important}
 /* Header and hero */
