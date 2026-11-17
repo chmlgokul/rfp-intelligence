@@ -67,7 +67,22 @@ html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f
 [data-testid="stSidebar"] .stButton>button,[data-testid="stSidebar"] .stDownloadButton>button{background:#f4f4f4!important;border:1px solid #f4f4f4!important;color:#111!important;border-radius:8px!important;font-weight:650!important}
 [data-testid="stSidebar"] .stButton>button:hover,[data-testid="stSidebar"] .stDownloadButton>button:hover{background:#dedede!important;border-color:#dedede!important;color:#111!important}
 [data-testid="stSidebar"] [data-testid="stFileUploader"] section{background:#202020!important;border:1px dashed #777!important;border-radius:10px!important}
-[data-testid="stSidebar"] [data-testid="stTextArea"] textarea,[data-testid="stSidebar"] [data-testid="stSelectbox"] div[data-baseweb="select"]{background:#242424!important;color:#fff!important;border:1px solid #555!important}
+/* Sidebar text area stays dark; select controls use a light surface with dark text. */
+[data-testid="stSidebar"] [data-testid="stTextArea"] textarea{background:#242424!important;color:#fff!important;border:1px solid #555!important}
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div{background:#f4f4f4!important;border:1px solid #cfcfcf!important;color:#111!important}
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] input,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] span,
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] div{color:#111!important;-webkit-text-fill-color:#111!important}
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] svg{fill:#111!important;color:#111!important}
+/* Streamlit renders dropdown menus in a portal outside the sidebar. */
+[data-baseweb="popover"] [role="listbox"],
+[data-baseweb="popover"] [role="option"],
+[data-baseweb="popover"] [role="option"] *,
+[data-baseweb="menu"] [role="option"],
+[data-baseweb="menu"] [role="option"] *{color:#171717!important;-webkit-text-fill-color:#171717!important}
+[data-baseweb="popover"] [role="option"]{background:#fff!important}
+[data-baseweb="popover"] [role="option"][aria-selected="true"]{background:#ededed!important}
 /* Header and hero */
 .rfp-topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:.35rem .25rem 1rem;border-bottom:1px solid #dedede;margin-bottom:1.15rem}
 .rfp-brand{font-size:1.2rem;font-weight:800;letter-spacing:-.035em;color:#111}
@@ -121,6 +136,8 @@ html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f
 .stButton>button:hover,.stDownloadButton>button:hover{background:#3b3b3b!important;border-color:#3b3b3b!important;transform:translateY(-1px)}
 .stButton>button[kind="primary"]{background:#111!important;border:1px solid #111!important;color:#fff!important}
 .stTextInput input,.stTextArea textarea,.stSelectbox div[data-baseweb="select"],.stMultiSelect div[data-baseweb="select"]{background:#fff!important;color:#171717!important;border:1px solid #d0d0d0!important;border-radius:8px!important}
+.stSelectbox [data-baseweb="select"] *, .stMultiSelect [data-baseweb="select"] *{color:#171717!important;-webkit-text-fill-color:#171717!important}
+.stSelectbox [data-baseweb="select"] svg,.stMultiSelect [data-baseweb="select"] svg{fill:#171717!important;color:#171717!important}
 .stTextInput input::placeholder,.stTextArea textarea::placeholder{color:#888!important}
 [data-testid="stDataFrame"],[data-testid="stDataEditor"]{border:1px solid #ddd;border-radius:10px;overflow:hidden}
 [data-testid="stAlert"]{border-radius:10px!important}
