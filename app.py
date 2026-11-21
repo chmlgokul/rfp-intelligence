@@ -233,6 +233,31 @@ html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{
 .rfp-hbar-value{font-size:.76rem;color:#26364d;font-weight:750;text-align:right}
 .rfp-empty-chart{height:170px;display:flex;align-items:center;justify-content:center;text-align:center;color:#8491a4;font-size:.82rem}
 .rfp-line-svg{display:block;width:100%;height:auto;max-height:205px}
+
+/* Balanced post-analysis layout: one full-width composition card and two equal insight cards */
+.rfp-composition-wide{min-height:0!important;padding:1.2rem 1.35rem!important;margin:.35rem 0 1.15rem!important}
+.rfp-composition-layout{display:grid;grid-template-columns:minmax(260px,.9fr) minmax(320px,1.1fr);gap:2rem;align-items:center}
+.rfp-composition-layout .rfp-donut-wrap{min-height:180px}
+.rfp-composition-breakdown{display:flex;flex-direction:column;gap:1rem;padding:.5rem .25rem}
+.rfp-composition-row{display:flex;flex-direction:column;gap:.45rem}
+.rfp-composition-label{display:flex;align-items:center;gap:.8rem;color:#526178;font-size:.84rem}
+.rfp-composition-label b{margin-left:auto;color:#172033;font-size:.95rem}
+.rfp-composition-label small{color:#7c8aa0;min-width:42px;text-align:right}
+.rfp-composition-track{height:10px;border-radius:20px;background:#e8edf4;overflow:hidden}
+.rfp-composition-track span{display:block;height:100%;border-radius:20px}
+.rfp-insight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.1rem;align-items:stretch;margin:.15rem 0 1.1rem}
+.rfp-insight-card{height:100%;min-height:230px;box-sizing:border-box;margin:0!important;padding:1.25rem 1.35rem!important;display:flex;flex-direction:column}
+.rfp-insight-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:.7rem;margin-bottom:.55rem}
+.rfp-insight-heading h3{margin:0!important}
+.rfp-insight-count{flex:0 0 auto;border-radius:999px;padding:.25rem .65rem;background:rgba(255,255,255,.72);border:1px solid rgba(126,145,171,.22);color:#53647c;font-size:.72rem;font-weight:800}
+.rfp-insight-card ul{margin:.3rem 0 0!important;padding-left:1.1rem!important}
+.rfp-insight-card li{margin:.45rem 0;overflow-wrap:anywhere}
+@media(max-width:850px){
+ .rfp-composition-layout{grid-template-columns:1fr;gap:.7rem}
+ .rfp-insight-grid{grid-template-columns:1fr}
+ .rfp-insight-card{min-height:0}
+}
+
 .rfp-chart-foot{font-size:.7rem;color:#8793a5;margin-top:.15rem}
 .rfp-donut-wrap{min-height:185px}
 @media(max-width:700px){.rfp-hbar-row{grid-template-columns:90px minmax(60px,2fr) 25px;gap:7px}.rfp-hbar-label{font-size:.7rem}}
@@ -319,14 +344,147 @@ hr{border-color:rgba(126,145,171,.25)!important}
 @keyframes fadein{from{opacity:.65;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:1150px){.rfp-kpis{grid-template-columns:repeat(3,1fr)}.rfp-workflow{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){[data-testid="stMainBlockContainer"],.main .block-container{padding:.65rem .65rem 2rem!important}.rfp-kpis{grid-template-columns:repeat(2,1fr)}.rfp-two-col{grid-template-columns:1fr}.rfp-stage-pill{position:relative;right:auto;top:auto;margin-top:.8rem;display:inline-block}.rfp-workflow{grid-template-columns:1fr}.rfp-topbar{flex-wrap:wrap}.rfp-donut-wrap{flex-wrap:wrap}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+/* Premium glass finish: slightly clearer surfaces, stronger blur, and restrained motion */
+[data-testid="stApp"]{
+ background-size:145% 145%!important;
+ animation:rfpAmbientCanvas 28s ease-in-out infinite alternate;
+}
+.rfp-hero{
+ background:linear-gradient(112deg,rgba(255,255,255,.39),rgba(255,255,255,.18) 58%,rgba(194,231,239,.25))!important;
+ backdrop-filter:blur(34px) saturate(170%)!important;-webkit-backdrop-filter:blur(34px) saturate(170%)!important;
+}
+.rfp-workflow{
+ background:rgba(255,255,255,.27)!important;
+ backdrop-filter:blur(32px) saturate(165%)!important;-webkit-backdrop-filter:blur(32px) saturate(165%)!important;
+}
+.rfp-kpi{
+ background:linear-gradient(145deg,rgba(255,255,255,.39),rgba(255,255,255,.15))!important;
+ backdrop-filter:blur(32px) saturate(175%)!important;-webkit-backdrop-filter:blur(32px) saturate(175%)!important;
+}
+.rfp-panel,.rfp-chart-card{
+ background:linear-gradient(140deg,rgba(255,255,255,.34),rgba(255,255,255,.15))!important;
+ backdrop-filter:blur(32px) saturate(170%)!important;-webkit-backdrop-filter:blur(32px) saturate(170%)!important;
+ border-color:rgba(255,255,255,.84)!important;
+}
+.rfp-stage-pill,[data-testid="stMetric"],[data-testid="stVerticalBlockBorderWrapper"]{
+ backdrop-filter:blur(30px) saturate(165%)!important;-webkit-backdrop-filter:blur(30px) saturate(165%)!important;
+}
+/* Gentle interactive feedback on controls without changing their behaviour */
+.stButton button,.stDownloadButton button,[data-testid="stFormSubmitButton"] button{
+ box-shadow:0 5px 14px rgba(28,48,78,.10)!important;
+ transition:transform .2s ease,box-shadow .2s ease,background .2s ease!important;
+}
+.stButton button:hover,.stDownloadButton button:hover,[data-testid="stFormSubmitButton"] button:hover{
+ transform:translateY(-2px)!important;box-shadow:0 9px 20px rgba(28,48,78,.17)!important;
+}
+.stTextInput input:focus,.stTextArea textarea:focus{
+ border-color:#6b9df4!important;box-shadow:0 0 0 3px rgba(75,132,235,.14)!important;
+}
+[data-testid="stTabs"] button{transition:color .18s ease,background .18s ease!important}
+[data-testid="stTabs"] button[aria-selected="true"]{color:#245fc5!important}
+@keyframes rfpAmbientCanvas{
+ 0%{background-position:0% 35%}
+ 100%{background-position:100% 65%}
+}
+@media(prefers-reduced-motion:reduce){
+ [data-testid="stApp"]{animation:none!important}
+ *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+/* Decision Centre: strong contrast, visible labels, glass panel and clear action */
+.rfp-decision-shell{
+  position:relative; overflow:hidden; margin:1rem 0 1.2rem; padding:1.35rem 1.45rem;
+  border:1px solid rgba(255,255,255,.92); border-left:5px solid #3478f6;
+  border-radius:20px;
+  background:linear-gradient(135deg,rgba(255,255,255,.84),rgba(235,244,255,.70) 58%,rgba(220,244,246,.66));
+  backdrop-filter:blur(28px) saturate(165%); -webkit-backdrop-filter:blur(28px) saturate(165%);
+  box-shadow:0 16px 38px rgba(31,52,82,.10),inset 0 1px 0 rgba(255,255,255,.95);
+  animation:decisionEnter .55s cubic-bezier(.2,.75,.25,1) both;
+}
+.rfp-decision-shell h2,.rfp-decision-shell h3{color:#172033!important;font-weight:800!important}
+.rfp-decision-shell p,.rfp-decision-shell span{color:#43536b}
+[data-testid="stExpander"]{
+  background:rgba(255,255,255,.74)!important;
+  border:1px solid rgba(116,139,170,.34)!important;border-radius:16px!important;
+  overflow:hidden!important;box-shadow:0 12px 28px rgba(31,52,82,.07)!important;
+}
+[data-testid="stExpander"] summary,
+[data-testid="stExpander"] summary *,
+[data-testid="stExpander"] [data-testid="stMarkdownContainer"],
+[data-testid="stExpander"] [data-testid="stMarkdownContainer"] *{
+  color:#172033!important;-webkit-text-fill-color:#172033!important;opacity:1!important;
+}
+[data-testid="stExpander"] summary{background:rgba(255,255,255,.72)!important;font-weight:800!important}
+[data-testid="stExpander"] details > div{background:rgba(255,255,255,.60)!important}
+[data-testid="stForm"]{background:transparent!important;border:0!important;padding:0!important}
+[data-testid="stRadio"] > label,
+[data-testid="stTextArea"] > label,
+[data-testid="stWidgetLabel"],
+[data-testid="stWidgetLabel"] *{
+  color:#172033!important;-webkit-text-fill-color:#172033!important;opacity:1!important;font-weight:700!important;
+}
+[data-testid="stRadio"] [role="radiogroup"] label{
+  color:#172033!important;-webkit-text-fill-color:#172033!important;
+  background:rgba(255,255,255,.84)!important;border:1px solid #d5deea!important;
+  border-radius:12px!important;padding:.55rem .8rem!important;margin:.15rem .25rem .15rem 0!important;
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease!important;
+}
+[data-testid="stRadio"] [role="radiogroup"] label:hover{
+  transform:translateY(-2px)!important;border-color:#7ba7ed!important;
+  box-shadow:0 7px 16px rgba(48,91,155,.12)!important;
+}
+[data-testid="stRadio"] [role="radiogroup"] label *,
+[data-testid="stRadio"] [role="radiogroup"] label p{
+  color:#172033!important;-webkit-text-fill-color:#172033!important;opacity:1!important;
+}
+[data-testid="stTextArea"] textarea{
+  min-height:112px!important;background:rgba(255,255,255,.96)!important;
+  color:#172033!important;-webkit-text-fill-color:#172033!important;
+  border:1px solid #cbd7e6!important;border-radius:12px!important;
+  font-size:.96rem!important;line-height:1.5!important;
+}
+[data-testid="stTextArea"] textarea::placeholder{
+  color:#718096!important;-webkit-text-fill-color:#718096!important;opacity:1!important;
+}
+[data-testid="stTextArea"] textarea:focus{
+  border-color:#3478f6!important;box-shadow:0 0 0 3px rgba(52,120,246,.16)!important;
+}
+[data-testid="stFormSubmitButton"] button,
+.rfp-decision-submit button{
+  min-height:3rem!important;border-radius:12px!important;
+  border:1px solid #245fc5!important;
+  background:linear-gradient(105deg,#245fc5,#258fae)!important;
+  color:#fff!important;-webkit-text-fill-color:#fff!important;
+  font-size:1rem!important;font-weight:800!important;letter-spacing:.01em!important;
+  box-shadow:0 9px 22px rgba(37,95,197,.22)!important;
+  transition:transform .2s ease,box-shadow .2s ease,filter .2s ease!important;
+}
+[data-testid="stFormSubmitButton"] button *,
+.rfp-decision-submit button *{
+  color:#fff!important;-webkit-text-fill-color:#fff!important;opacity:1!important;
+}
+[data-testid="stFormSubmitButton"] button:hover,
+.rfp-decision-submit button:hover{
+  transform:translateY(-2px)!important;filter:brightness(1.06)!important;
+  box-shadow:0 13px 27px rgba(37,95,197,.30)!important;
+}
+.rfp-decision-help{font-size:.82rem;color:#65758c!important;margin:.45rem 0 .8rem}
+@keyframes decisionEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes decisionGlow{0%,100%{box-shadow:0 16px 38px rgba(31,52,82,.10),inset 0 1px 0 rgba(255,255,255,.95)}50%{box-shadow:0 18px 42px rgba(52,120,246,.16),inset 0 1px 0 rgba(255,255,255,.98)}}
+.rfp-decision-shell:hover{animation:decisionGlow 3.8s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){
+ .rfp-decision-shell,.rfp-decision-shell:hover{animation:none!important}
+ [data-testid="stRadio"] [role="radiogroup"] label,
+ [data-testid="stFormSubmitButton"] button,.rfp-decision-submit button{transition:none!important}
+}
+
 </style>
 
 """, unsafe_allow_html=True)
 
 
 def init_state():
-    defaults={"pages":[],"requirements":[],"matches":[],"risks":[],"questions":[],"proposal":[],"recommendation":{},"file_name":"","opportunity_stage":"New","human_decision":"Pending human review","decision_notes":"","opportunity_id":None}
+    defaults={"pages":[],"requirements":[],"matches":[],"risks":[],"questions":[],"proposal":[],"recommendation":{},"file_name":"","opportunity_stage":"New","human_decision":"Pending human review","decision_notes":"","opportunity_id":None,"decision_save_notice":""}
     for k,v in defaults.items(): st.session_state.setdefault(k,v)
 
 
@@ -354,10 +512,41 @@ def run_analysis(capability_text):
     st.success("Capability comparison and decision-support analysis updated.")
 
 
+def opportunity_payload():
+    return {k:st.session_state[k] for k in ("pages","requirements","matches","risks","questions","proposal","recommendation","file_name","opportunity_stage","human_decision","decision_notes")}
+
+
 def save_current():
-    if not st.session_state.get("file_name"): st.warning("Process an RFP before saving."); return
-    payload={k:st.session_state[k] for k in ("pages","requirements","matches","risks","questions","proposal","recommendation","file_name","opportunity_stage","human_decision","decision_notes")}
-    oid=save_opportunity(payload,st.session_state.get("opportunity_id")); st.session_state["opportunity_id"]=oid; st.success(f"Opportunity saved as #{oid}.")
+    if not st.session_state.get("file_name"):
+        st.warning("Process an RFP before saving.")
+        return
+    oid=save_opportunity(opportunity_payload(),st.session_state.get("opportunity_id"))
+    st.session_state["opportunity_id"]=oid
+    st.success(f"Opportunity saved as #{oid}.")
+
+
+def confirm_human_decision(decision, notes):
+    """Validate and persist the authorised reviewer's final decision."""
+    if not st.session_state.get("file_name"):
+        st.error("Import and process an RFP before confirming a decision.")
+        return
+    if decision == "Pending human review":
+        st.warning("Choose Bid, No-Bid or Hold for clarification before confirming.")
+        return
+    clean_notes = str(notes or "").strip()
+    if not clean_notes:
+        st.warning("Please enter a decision justification before saving.")
+        return
+
+    st.session_state["human_decision"] = decision
+    st.session_state["decision_notes"] = clean_notes
+    try:
+        oid=save_opportunity(opportunity_payload(),st.session_state.get("opportunity_id"))
+        st.session_state["opportunity_id"] = oid
+        st.session_state["decision_save_notice"] = f"{decision} decision saved successfully for opportunity #{oid}."
+        st.rerun()
+    except Exception as exc:
+        st.error(f"Could not save the decision. Please try again. Details: {exc}")
 
 
 def load_saved(oid):
@@ -366,6 +555,9 @@ def load_saved(oid):
     for k,v in payload.items():
         if k in st.session_state: st.session_state[k]=v
         elif k in ("pages","requirements","matches","risks","questions","proposal","recommendation","file_name","opportunity_stage","human_decision","decision_notes","opportunity_id"): st.session_state[k]=v
+    # Keep decision widgets in sync with the loaded opportunity payload.
+    st.session_state["human_decision_radio"] = st.session_state.get("human_decision","Pending human review")
+    st.session_state["decision_notes_text"] = st.session_state.get("decision_notes","")
     for k in ("requirements_editor","proposal_editor"): st.session_state.pop(k,None)
     st.rerun()
 
@@ -380,6 +572,9 @@ def metric_card(icon,label,value,colour,decision=False):
 
 def main():
     init_state(); initialise_database()
+    if st.session_state.get("decision_save_notice"):
+        st.success(st.session_state["decision_save_notice"])
+        st.session_state["decision_save_notice"] = ""
     # Import-first workspace: keep the sidebar focused until a document is processed.
     with st.sidebar:
         st.markdown("<div style='font-size:1.08rem;font-weight:800;letter-spacing:-.035em;margin:.25rem 0 1rem;color:#fff'>RFP INTELLIGENCE</div>",unsafe_allow_html=True)
@@ -614,36 +809,75 @@ def main():
                         unsafe_allow_html=True
                     )
 
-                chart_col1,chart_col2=st.columns([1,1],gap="large")
-                with chart_col1:
-                    st.markdown(
-                        f"<div class='rfp-chart-card'><div class='rfp-chart-title'>Requirement Composition</div>"
-                        f"<div class='rfp-chart-subtitle'>Mandatory, optional and verification workload</div>"
-                        f"{donut_chart}</div>",
-                        unsafe_allow_html=True
+                # Keep Requirement Composition, remove the low-value source-page trend
+                # card, and use the freed space for a balanced full-width composition view.
+                composition_rows=[]
+                for label,count in type_counts.items():
+                    pct=(float(count)/donut_total*100) if donut_total else 0
+                    colour=type_palette.get(label,"#9aa7b8")
+                    composition_rows.append(
+                        f"<div class='rfp-composition-row'>"
+                        f"<div class='rfp-composition-label'><span>{safe(label)}</span>"
+                        f"<b>{int(count)}</b><small>{pct:.0f}%</small></div>"
+                        f"<div class='rfp-composition-track'><span style='width:{pct:.1f}%;background:{colour}'></span></div>"
+                        f"</div>"
                     )
-                with chart_col2:
-                    st.markdown(
-                        f"<div class='rfp-chart-card'><div class='rfp-chart-title'>Requirements Across Source Pages</div>"
-                        f"<div class='rfp-chart-subtitle'>Requirement count by extracted page or worksheet</div>"
-                        f"{line_chart}</div>",
-                        unsafe_allow_html=True
-                    )
+                composition_summary="".join(composition_rows) or "<div class='rfp-empty-chart'>No requirement composition data available.</div>"
+                st.markdown(
+                    f"<div class='rfp-chart-card rfp-composition-wide'>"
+                    f"<div class='rfp-chart-title'>Requirement Composition</div>"
+                    f"<div class='rfp-chart-subtitle'>Mandatory, optional and verification workload</div>"
+                    f"<div class='rfp-composition-layout'><div>{donut_chart}</div>"
+                    f"<div class='rfp-composition-breakdown'>{composition_summary}</div></div></div>",
+                    unsafe_allow_html=True
+                )
 
+                # Equal-height insight cards. When no blockers exist, show the
+                # compliance summary so the left card remains informative rather
+                # than leaving a large blank area beneath a single bullet.
                 gaps=[m for m in matches if m.get("Type")=="Mandatory" and m.get("Match Status")=="Gap"]
                 strengths=[m for m in matches if m.get("Match Status")=="Match"]
-                a,b=st.columns(2)
-                with a:
-                    items="".join([f"<li>🔴 {safe(x.get('Requirement',''))[:230]}</li>" for x in gaps[:3]]) or "<li>No mandatory capability gaps identified.</li>"
-                    st.markdown(f"<div class='rfp-panel rfp-risk'><h3>⚠ &nbsp; Fatal Deal-Breakers (Why No-Bid?)</h3><ul>{items}</ul></div>",unsafe_allow_html=True)
-                with b:
-                    items="".join([f"<li>🟢 {safe(x.get('Requirement',''))[:230]}</li>" for x in strengths[:3]]) or "<li>No full capability matches found for the current profile.</li>"
-                    st.markdown(f"<div class='rfp-panel rfp-strength'><h3>✓ &nbsp; Company Strengths (Why Bid?)</h3><ul>{items}</ul></div>",unsafe_allow_html=True)
-                with st.expander("Record human Bid / No-Bid decision",expanded=True):
-                    decision=st.radio("Final decision",["Pending human review","Bid","No-Bid","Hold for clarification"],index=["Pending human review","Bid","No-Bid","Hold for clarification"].index(st.session_state["human_decision"]),horizontal=True,key="human_decision_radio")
-                    st.session_state["human_decision"]=decision
-                    st.session_state["decision_notes"]=st.text_input("Decision justification / reviewer notes",value=st.session_state.get("decision_notes",""),key="decision_notes_text")
-                    st.caption("AI recommendation is advisory. The final decision must be recorded by an authorised human reviewer.")
+                gap_items="".join([f"<li>🔴 {safe(x.get('Requirement',''))[:230]}</li>" for x in gaps[:5]])
+                if not gap_items:
+                    gap_items=(
+                        "<li>No mandatory capability gaps identified.</li>"
+                        f"<li><b>Mandatory compliance:</b> {met} of {mt} requirements met.</li>"
+                        f"<li><b>High-severity risks:</b> {hr} identified.</li>"
+                    )
+                strength_items="".join([f"<li>🟢 {safe(x.get('Requirement',''))[:230]}</li>" for x in strengths[:5]])
+                if not strength_items:
+                    strength_items="<li>No full capability matches found for the current profile.</li>"
+                st.markdown(
+                    f"<div class='rfp-insight-grid'>"
+                    f"<section class='rfp-panel rfp-risk rfp-insight-card'>"
+                    f"<div class='rfp-insight-heading'><h3>⚠ &nbsp; Fatal Deal-Breakers (Why No-Bid?)</h3>"
+                    f"<span class='rfp-insight-count'>{len(gaps)} gaps</span></div>"
+                    f"<ul>{gap_items}</ul></section>"
+                    f"<section class='rfp-panel rfp-strength rfp-insight-card'>"
+                    f"<div class='rfp-insight-heading'><h3>✓ &nbsp; Company Strengths (Why Bid?)</h3>"
+                    f"<span class='rfp-insight-count'>{len(strengths)} matches</span></div>"
+                    f"<ul>{strength_items}</ul></section></div>",
+                    unsafe_allow_html=True
+                )
+                st.markdown("<div class='rfp-decision-shell'><h2>Final Bid Decision</h2><p class='rfp-decision-help'>Select the authorised reviewer's decision and enter a reason. The decision is saved to the opportunity database.</p></div>", unsafe_allow_html=True)
+                decision=st.radio(
+                    "Final decision",
+                    ["Pending human review","Bid","No-Bid","Hold for clarification"],
+                    index=["Pending human review","Bid","No-Bid","Hold for clarification"].index(st.session_state["human_decision"]),
+                    horizontal=True,
+                    key="human_decision_radio",
+                )
+                notes=st.text_area(
+                    "Decision justification / reviewer notes",
+                    value=st.session_state.get("decision_notes",""),
+                    height=112,
+                    key="decision_notes_text",
+                    placeholder="Enter the reason for this decision...",
+                )
+                st.markdown("<div class='rfp-decision-help'>A justification is required. Pending human review cannot be confirmed.</div>", unsafe_allow_html=True)
+                if st.button("✓  Save & Confirm Decision", type="primary", use_container_width=True, key="dashboard_save_decision"):
+                    confirm_human_decision(decision,notes)
+                st.caption("AI recommendation is advisory. The final decision must be recorded by an authorised human reviewer.")
     elif nav.startswith("▤"):
         st.subheader("Extracted requirements")
         if reqs:
@@ -672,12 +906,28 @@ def main():
     elif nav.startswith("◎"):
         st.subheader("Human Decision Centre")
         st.info("AI analysis supports the reviewer; it does not make the final business decision.")
-        decision=st.radio("Record final decision",["Pending human review","Bid","No-Bid","Hold for clarification"],index=["Pending human review","Bid","No-Bid","Hold for clarification"].index(st.session_state["human_decision"]),horizontal=True,key="decision_page_radio")
-        st.session_state["human_decision"]=decision
-        st.session_state["decision_notes"]=st.text_area("Decision justification / reviewer notes",value=st.session_state.get("decision_notes",""),key="decision_page_notes")
-        if decision=="Bid": st.success("Bid selected. Proposal support is unlocked.")
-        elif decision=="No-Bid": st.error("No-Bid selected. Opportunity marked as declined.")
-        else: st.warning("Decision is awaiting final review.")
+        st.markdown("<div class='rfp-decision-shell'><h2>Final Bid Decision</h2><p class='rfp-decision-help'>Choose the final human decision and record the reason before saving.</p></div>", unsafe_allow_html=True)
+        decision=st.radio(
+            "Record final decision",
+            ["Pending human review","Bid","No-Bid","Hold for clarification"],
+            index=["Pending human review","Bid","No-Bid","Hold for clarification"].index(st.session_state["human_decision"]),
+            horizontal=True,
+            key="human_decision_radio",
+        )
+        notes=st.text_area(
+            "Decision justification / reviewer notes",
+            value=st.session_state.get("decision_notes",""),
+            height=125,
+            key="decision_notes_text",
+            placeholder="Enter the reason for this decision...",
+        )
+        st.markdown("<div class='rfp-decision-help'>A justification is required. Pending human review cannot be confirmed.</div>", unsafe_allow_html=True)
+        if st.button("✓  Save & Confirm Decision", type="primary", use_container_width=True, key="centre_save_decision"):
+            confirm_human_decision(decision,notes)
+        if decision=="Bid": st.success("Bid selected. Proposal support is unlocked after the decision is saved.")
+        elif decision=="No-Bid": st.error("No-Bid selected. The opportunity will be marked as declined when saved.")
+        elif decision=="Hold for clarification": st.warning("The opportunity will remain on hold when saved.")
+        else: st.warning("Decision is awaiting final human review.")
     elif nav.startswith("▣"):
         st.subheader("Proposal preparation work queue")
         if st.session_state["human_decision"]!="Bid": st.warning("Proposal preparation is locked until the human decision is Bid.")
