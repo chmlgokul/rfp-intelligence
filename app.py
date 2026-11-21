@@ -4,8 +4,10 @@ The presentation layer is redesigned; the existing extraction, analysis,
 storage and human-approval functions remain backed by the modules package.
 """
 import os
+import io
 import tempfile
 import html
+from datetime import datetime
 import pandas as pd
 import streamlit as st
 
@@ -570,6 +572,201 @@ def metric_card(icon,label,value,colour,decision=False):
     return f'<div class="{cls}"><div class="ico">{icon}</div><div class="lab">{safe(label)}</div><div class="val">{safe(value)}</div></div>'
 
 
+
+def _export_frames():
+    """Build consistent report tables from the current opportunity session."""
+    reqs = st.session_state.get("requirements", [])
+    matches = st.session_state.get("matches", [])
+    risks = st.session_state.get("risks", [])
+    questions = st.session_state.get("questions", [])
+    proposal = st.session_state.get("proposal", [])
+    rec = st.session_state.get("recommendation", {}) or {}
+
+    summary = [
+        ("RFP file", st.session_state.get("file_name", "")),
+        ("Opportunity ID", st.session_state.get("opportunity_id") or "Not saved yet"),
+        ("Exported at", datetime.now().strftime("%Y-%m-%d %H:%M")),
+        ("Opportunity stage", st.session_state.get("opportunity_stage", "")),
+        ("AI recommendation", rec.get("Signal", "Not analysed")),
+        ("Feasibility score", rec.get("Score", "")),
+        ("Mandatory requirements", rec.get("Mandatory Requirements", "")),
+        ("Mandatory gaps", rec.get("Mandatory Gaps", "")),
+        ("High risks", rec.get("High Risks", "")),
+        ("Items to verify", rec.get("Items to Verify", "")),
+        ("Human decision", st.session_state.get("human_decision", "Pending human review")),
+        ("Decision justification", st.session_state.get("decision_notes", "")),
+    ]
+    return {
+        "summary": pd.DataFrame(summary, columns=["Field", "Value"]),
+        "requirements": pd.DataFrame(reqs),
+        "capability_match": pd.DataFrame(matches),
+        "risk_register": pd.DataFrame(risks),
+        "clarifications": pd.DataFrame(questions),
+        "proposal_queue": pd.DataFrame(proposal),
+    }
+
+
+def build_excel_export():
+    """Return a multi-sheet XLSX workbook for the active RFP analysis."""
+    frames = _export_frames()
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        sheet_names = {
+            "summary": "Executive Summary",
+            "requirements": "Requirements",
+            "capability_match": "Capability Match",
+            "risk_register": "Risk Register",
+            "clarifications": "Clarifications",
+            "proposal_queue": "Proposal Queue",
+        }
+        for key, frame in frames.items():
+            frame.to_excel(writer, sheet_name=sheet_names[key], index=False)
+            ws = writer.sheets[sheet_names[key]]
+            ws.freeze_panes = "A2"
+            ws.auto_filter.ref = ws.dimensions
+            for column_cells in ws.columns:
+                values = [len(str(cell.value or "")) for cell in column_cells]
+                width = min(max(max(values, default=10) + 2, 12), 58)
+                ws.column_dimensions[column_cells[0].column_letter].width = width
+            for cell in ws[1]:
+                cell.font = cell.font.copy(bold=True, color="FFFFFF")
+                cell.fill = __import__("openpyxl").styles.PatternFill(
+                    "solid", fgColor="1B2940"
+                )
+    output.seek(0)
+    return output.getvalue()
+
+
+def build_pdf_export():
+    """Return a clean, printable PDF summary with the opportunity evidence."""
+    from reportlab.lib import colors
+    from reportlab.lib.enums import TA_LEFT
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import mm
+    from reportlab.platypus import (
+        SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+    )
+    from xml.sax.saxutils import escape
+
+    frames = _export_frames()
+    output = io.BytesIO()
+    doc = SimpleDocTemplate(
+        output, pagesize=landscape(A4),
+        rightMargin=13 * mm, leftMargin=13 * mm,
+        topMargin=14 * mm, bottomMargin=14 * mm,
+        title="RFP Intelligence Analysis Report",
+        author="RFP Intelligence",
+    )
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(
+        name="ReportTitle", parent=styles["Title"], textColor=colors.HexColor("#172033"),
+        fontName="Helvetica-Bold", fontSize=20, leading=24, alignment=TA_LEFT,
+        spaceAfter=4 * mm,
+    ))
+    styles.add(ParagraphStyle(
+        name="SectionHead", parent=styles["Heading2"],
+        textColor=colors.HexColor("#245FC5"), fontSize=12, leading=15,
+        spaceBefore=5 * mm, spaceAfter=2 * mm,
+    ))
+    styles.add(ParagraphStyle(
+        name="CellText", parent=styles["BodyText"], fontSize=7.5, leading=9,
+        wordWrap="CJK",
+    ))
+    styles.add(ParagraphStyle(
+        name="SmallText", parent=styles["BodyText"], fontSize=8, leading=10,
+        textColor=colors.HexColor("#53647C"),
+    ))
+
+    def clean(value):
+        text = str(value if value is not None else "")
+        # Built-in PDF fonts do not cover every Unicode glyph.
+        return text.replace("—", "-").replace("–", "-").replace("•", "-").replace("✓", "Yes")
+
+    def make_table(frame, max_rows=250):
+        if frame.empty:
+            return [Paragraph("No records available.", styles["SmallText"])]
+        display = frame.head(max_rows).fillna("")
+        data = [[Paragraph(f"<b>{escape(clean(c))}</b>", styles["CellText"])
+                 for c in display.columns]]
+        for row in display.astype(str).itertuples(index=False, name=None):
+            data.append([
+                Paragraph(escape(clean(value)).replace("\n", "<br/>"), styles["CellText"])
+                for value in row
+            ])
+        usable_width = landscape(A4)[0] - 26 * mm
+        col_count = max(1, len(display.columns))
+        widths = [usable_width / col_count] * col_count
+        table = Table(data, colWidths=widths, repeatRows=1, hAlign="LEFT")
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1B2940")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#D6DEEA")),
+            ("ROWBACKGROUNDS", (0, 1), (-1, -1),
+             [colors.white, colors.HexColor("#F2F6FB")]),
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 5),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        return [table]
+
+    story = [
+        Paragraph("RFP Intelligence", styles["ReportTitle"]),
+        Paragraph("Procurement analysis report | Evidence-led, human-approved decision support",
+                  styles["SmallText"]),
+        Spacer(1, 4 * mm),
+    ]
+    story += make_table(frames["summary"], max_rows=50)
+    for key, heading in [
+        ("requirements", "Extracted Requirements"),
+        ("capability_match", "Capability Match"),
+        ("risk_register", "Risk Register"),
+        ("clarifications", "Clarification Questions"),
+        ("proposal_queue", "Proposal Work Queue"),
+    ]:
+        story.append(Paragraph(heading, styles["SectionHead"]))
+        story += make_table(frames[key])
+    doc.build(story)
+    output.seek(0)
+    return output.getvalue()
+
+
+def render_save_export_controls(location="sidebar"):
+    """Render persistent save and report-download controls for the active RFP."""
+    if not st.session_state.get("file_name"):
+        return
+    st.markdown("**Save & export analysis**")
+    if st.button("Save analysis to database", use_container_width=True,
+                 key=f"{location}_save_analysis"):
+        save_current()
+    try:
+        pdf_bytes = build_pdf_export()
+        st.download_button(
+            "Download PDF report", data=pdf_bytes,
+            file_name=f"{os.path.splitext(st.session_state['file_name'])[0]}_analysis_report.pdf",
+            mime="application/pdf", use_container_width=True,
+            key=f"{location}_export_pdf",
+        )
+    except ImportError:
+        st.warning("PDF export requires reportlab. Add `reportlab` to requirements.txt.")
+    except Exception as exc:
+        st.error(f"PDF export could not be prepared: {exc}")
+    try:
+        excel_bytes = build_excel_export()
+        st.download_button(
+            "Download Excel workbook", data=excel_bytes,
+            file_name=f"{os.path.splitext(st.session_state['file_name'])[0]}_analysis.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            use_container_width=True, key=f"{location}_export_excel",
+        )
+    except ImportError:
+        st.warning("Excel export requires openpyxl. Add `openpyxl` to requirements.txt.")
+    except Exception as exc:
+        st.error(f"Excel export could not be prepared: {exc}")
+
+
 def main():
     init_state(); initialise_database()
     if st.session_state.get("decision_save_notice"):
@@ -586,8 +783,27 @@ def main():
         else:
             nav="⌂  Dashboard"
 
-        # The document importer lives in the main workspace, not in the sidebar.
+        # Keep New RFP intake available in the sidebar at all times.
+        st.subheader("New RFP / Upload")
+        sidebar_upload = st.file_uploader(
+            "Choose another tender document",
+            type=["pdf", "xls", "xlsx", "xlx"],
+            key="rfp_upload_sidebar",
+            help="Uploading a new RFP replaces the active workspace. Previously saved opportunities remain in the database.",
+        )
+        if st.button(
+            "Process new RFP",
+            type="primary",
+            use_container_width=True,
+            disabled=sidebar_upload is None,
+            key="sidebar_process_new_rfp",
+        ):
+            process_upload(sidebar_upload)
+            if st.session_state.get("file_name"):
+                st.rerun()
+
         if st.session_state.get("file_name"):
+            st.caption("The active workspace will switch to the new RFP. Save this opportunity first if you want to preserve its latest unsaved edits.")
             st.markdown("<div style='height:1px;background:#444;margin:1.1rem 0'></div>",unsafe_allow_html=True)
             st.subheader("Company capability profile")
             cap=st.text_area("One capability per line",value="\n".join(DEFAULT_CAPABILITIES),height=155,key="capability_profile",help="Edit this profile to reflect the capabilities relevant to the current tender.")
@@ -613,6 +829,9 @@ def main():
                         st.session_state[k]=[]
                     st.session_state.update({"recommendation":{},"file_name":"","opportunity_stage":"New","human_decision":"Pending human review","decision_notes":"","opportunity_id":None})
                     st.rerun()
+
+            st.markdown("<div style='height:1px;background:#444;margin:1.1rem 0'></div>",unsafe_allow_html=True)
+            render_save_export_controls("sidebar")
 
     # Before import, show a focused welcome state and a central document importer —
     # no empty KPI cards, workflow cards, charts, or analysis panels.
@@ -674,6 +893,12 @@ def main():
     kpis=[metric_card("▤","RFP Pages",len(st.session_state["pages"]),"cyan"),metric_card("▱","Requirements",len(reqs),"purple"),metric_card("⬡","Mandatory",mandatory,"amber"),metric_card("▣","Deadlines Identified",deadlines,"green"),metric_card("⚠","Open Risks",len(risks),"pink"),metric_card("⌁","Human Decision",st.session_state["human_decision"],"teal",True)]
     st.markdown("<div class='rfp-section-title'>Opportunity dashboard</div><div class='rfp-kpis'>"+''.join(kpis)+"</div>",unsafe_allow_html=True)
     st.caption(f"Opportunity: {st.session_state['file_name'] or 'No document uploaded'}  |  Stage: {stage}  |  {'Saved #' + str(st.session_state['opportunity_id']) if st.session_state.get('opportunity_id') else 'Unsaved opportunity'}")
+
+    # Save and export actions are also available in the main dashboard.
+    if nav.startswith("⌂"):
+        with st.expander("Save & Export Analysis", expanded=False):
+            st.caption("Save the current opportunity to the database, or export a report for sharing and review.")
+            render_save_export_controls("dashboard")
 
     # Dashboard landing view follows the supplied image composition.
     if nav.startswith("⌂"):
