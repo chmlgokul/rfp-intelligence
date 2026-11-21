@@ -21,166 +21,307 @@ from modules.rfp_analysis import (
 st.set_page_config(page_title="RFP Intelligence", page_icon="◈", layout="wide", initial_sidebar_state="expanded")
 
 st.markdown(r"""
+
 <style>
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-:root{--ink:#171717;--muted:#6b7280;--line:#dedede;--soft:#f6f6f6;--white:#fff;--black:#111}
-html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{background:#f3f4f5!important;color:var(--ink)!important;font-family:Inter,Arial,sans-serif!important}
-[data-testid="stHeader"]{background:rgba(255,255,255,.96)!important;border-bottom:1px solid #e7e7e7}
-[data-testid="stMain"]{background:#f3f4f5!important}
-[data-testid="stMainBlockContainer"],.main .block-container{max-width:1600px!important;padding:1.35rem 1.65rem 3rem!important}
+:root{
+ --ink:#172033;--muted:#738096;--line:rgba(126,145,171,.24);
+ --glass:rgba(255,255,255,.70);--glass-strong:rgba(255,255,255,.86);
+ --navy:#111827;--blue:#3478f6;--cyan:#26b9c8;--violet:#8b70df;
+ --green:#16834b;--amber:#b97813;--red:#c13b42;
+}
+html,body,[data-testid="stApp"],[data-testid="stAppViewContainer"]{
+ background:
+  radial-gradient(ellipse at 8% 8%,rgba(80,145,235,.22),transparent 38%),
+  radial-gradient(ellipse at 92% 24%,rgba(76,198,210,.20),transparent 36%),
+  radial-gradient(ellipse at 72% 92%,rgba(145,125,225,.13),transparent 38%),
+  linear-gradient(135deg,#e8eef7 0%,#f3f6fa 46%,#e3eff2 100%)!important;
+ color:var(--ink)!important;font-family:Inter,Arial,sans-serif!important;
+}
+[data-testid="stHeader"]{background:rgba(247,249,252,.78)!important;backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+[data-testid="stMain"],[data-testid="stMainBlockContainer"]{background:transparent!important}
+[data-testid="stMainBlockContainer"],.main .block-container{max-width:1700px!important;padding:1.2rem 1.5rem 3rem!important}
 
-/* Sidebar */
-[data-testid="stSidebar"]{background:#151515!important;border-right:1px solid #303030!important}
+/* Dark navigation rail — high contrast controls */
+[data-testid="stSidebar"]{background:linear-gradient(180deg,#151b27 0%,#101722 100%)!important;border-right:1px solid rgba(255,255,255,.10)!important}
 [data-testid="stSidebar"]>div:first-child{background:transparent!important}
 [data-testid="stSidebar"] [data-testid="stWidgetLabel"],
 [data-testid="stSidebar"] [data-testid="stWidgetLabel"] *,
 [data-testid="stSidebar"] .stMarkdown,[data-testid="stSidebar"] .stMarkdown *,
 [data-testid="stSidebar"] .stCaption,[data-testid="stSidebar"] .stCaption *,
-[data-testid="stSidebar"] .stSubheader,[data-testid="stSidebar"] .stSubheader *{color:#f5f5f5!important}
+[data-testid="stSidebar"] .stSubheader,[data-testid="stSidebar"] .stSubheader *{
+ color:#f3f6fb!important;
+}
 [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p{font-weight:650!important}
-
-/* Sidebar action buttons */
-[data-testid="stSidebar"] .stButton button,
-[data-testid="stSidebar"] .stDownloadButton button{
- background:#f4f4f4!important;color:#111!important;border:1px solid #d0d0d0!important;
- border-radius:8px!important;font-weight:650!important;min-height:2.35rem!important;opacity:1!important
+[data-testid="stSidebar"] .stButton button,[data-testid="stSidebar"] .stDownloadButton button{
+ background:#f5f7fb!important;color:#151b27!important;border:1px solid #d5dce7!important;
+ border-radius:9px!important;font-weight:700!important;min-height:2.45rem!important;opacity:1!important;
 }
 [data-testid="stSidebar"] .stButton button *,
-[data-testid="stSidebar"] .stDownloadButton button *{color:#111!important;-webkit-text-fill-color:#111!important;fill:#111!important}
-[data-testid="stSidebar"] .stButton button:hover,
-[data-testid="stSidebar"] .stDownloadButton button:hover{background:#dedede!important;border-color:#bdbdbd!important}
-[data-testid="stSidebar"] .stButton button:disabled,
-[data-testid="stSidebar"] .stDownloadButton button:disabled{background:#3a3a3a!important;border-color:#555!important;color:#bdbdbd!important;opacity:1!important}
-[data-testid="stSidebar"] .stButton button:disabled *,
-[data-testid="stSidebar"] .stDownloadButton button:disabled *{color:#bdbdbd!important;-webkit-text-fill-color:#bdbdbd!important}
-
-/* Upload area and uploaded file row */
+[data-testid="stSidebar"] .stDownloadButton button *{
+ color:#151b27!important;-webkit-text-fill-color:#151b27!important;fill:#151b27!important;
+}
+[data-testid="stSidebar"] .stButton button:hover,[data-testid="stSidebar"] .stDownloadButton button:hover{
+ background:#e5edf8!important;border-color:#a9bedb!important;transform:translateY(-1px)
+}
+[data-testid="stSidebar"] .stButton button:disabled,[data-testid="stSidebar"] .stDownloadButton button:disabled{
+ background:#3b4555!important;border-color:#536075!important;color:#c5ceda!important;opacity:1!important
+}
+[data-testid="stSidebar"] .stButton button:disabled *,[data-testid="stSidebar"] .stDownloadButton button:disabled *{
+ color:#c5ceda!important;-webkit-text-fill-color:#c5ceda!important
+}
 [data-testid="stSidebar"] [data-testid="stFileUploader"],
-[data-testid="stSidebar"] [data-testid="stFileUploader"] section{background:#202020!important;color:#f5f5f5!important;border-radius:10px!important}
-[data-testid="stSidebar"] [data-testid="stFileUploader"] section{border:1px dashed #888!important}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section{
+ background:rgba(255,255,255,.07)!important;color:#f5f7fb!important;border-radius:12px!important;
+}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] section{border:1px dashed rgba(205,220,244,.52)!important}
 [data-testid="stSidebar"] [data-testid="stFileUploader"] section *,
 [data-testid="stSidebar"] [data-testid="stFileUploader"] small,
 [data-testid="stSidebar"] [data-testid="stFileUploader"] p,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] span{color:#f5f5f5!important;-webkit-text-fill-color:#f5f5f5!important}
-[data-testid="stSidebar"] [data-testid="stFileUploader"] button{background:#f4f4f4!important;color:#111!important;border:1px solid #d0d0d0!important;border-radius:8px!important}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] span{
+ color:#f5f7fb!important;-webkit-text-fill-color:#f5f7fb!important
+}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button{
+ background:#f5f7fb!important;color:#151b27!important;border:1px solid #d5dce7!important;border-radius:8px!important
+}
 [data-testid="stSidebar"] [data-testid="stFileUploader"] button *,
 [data-testid="stSidebar"] [data-testid="stFileUploader"] button p,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] button span{color:#111!important;-webkit-text-fill-color:#111!important;fill:#111!important}
+[data-testid="stSidebar"] [data-testid="stFileUploader"] button span{
+ color:#151b27!important;-webkit-text-fill-color:#151b27!important;fill:#151b27!important
+}
 [data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"],
 [data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] *{
- background:#f4f4f4!important;color:#171717!important;-webkit-text-fill-color:#171717!important
+ background:#f5f7fb!important;color:#172033!important;-webkit-text-fill-color:#172033!important
 }
-[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] button,
-[data-testid="stSidebar"] [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] button *{
- color:#171717!important;-webkit-text-fill-color:#171717!important;fill:#171717!important
-}
-
-/* Selectbox value and dropdown menu */
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] > div{
- background:#f4f4f4!important;border:1px solid #cfcfcf!important;border-radius:8px!important
+[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"]>div{
+ background:#f5f7fb!important;border:1px solid #d4dce8!important;border-radius:9px!important
 }
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"],
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="select"] *,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"],
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [role="combobox"] *,
-[data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="value"],
 [data-testid="stSidebar"] [data-testid="stSelectbox"] [data-baseweb="value"] *,
 [data-testid="stSidebar"] [data-testid="stSelectbox"] input{
- color:#111!important;-webkit-text-fill-color:#111!important;opacity:1!important
+ color:#172033!important;-webkit-text-fill-color:#172033!important;opacity:1!important
 }
-[data-testid="stSidebar"] [data-testid="stSelectbox"] svg{color:#111!important;fill:#111!important}
-[data-baseweb="popover"] [role="listbox"],
-[data-baseweb="popover"] [role="option"],
-[data-baseweb="popover"] [role="option"] *,
-[data-baseweb="menu"] [role="option"],
-[data-baseweb="menu"] [role="option"] *{color:#171717!important;-webkit-text-fill-color:#171717!important}
+[data-testid="stSidebar"] [data-testid="stSelectbox"] svg{color:#172033!important;fill:#172033!important}
+[data-baseweb="popover"] [role="listbox"],[data-baseweb="popover"] [role="option"],
+[data-baseweb="popover"] [role="option"] *,[data-baseweb="menu"] [role="option"] *{
+ color:#172033!important;-webkit-text-fill-color:#172033!important
+}
 [data-baseweb="popover"] [role="option"]{background:#fff!important}
-[data-baseweb="popover"] [role="option"][aria-selected="true"]{background:#ededed!important}
-
-/* Sidebar text area, radios and expanders */
+[data-baseweb="popover"] [role="option"][aria-selected="true"]{background:#e9eff8!important}
 [data-testid="stSidebar"] [data-testid="stTextArea"] textarea{
- background:#242424!important;color:#fff!important;-webkit-text-fill-color:#fff!important;border:1px solid #666!important;border-radius:8px!important
+ background:rgba(255,255,255,.10)!important;color:#fff!important;-webkit-text-fill-color:#fff!important;
+ border:1px solid rgba(220,232,250,.35)!important;border-radius:9px!important
 }
-[data-testid="stSidebar"] [data-testid="stTextArea"] textarea::placeholder{color:#bdbdbd!important}
-[data-testid="stSidebar"] [data-testid="stRadio"] label{color:#f5f5f5!important;padding:.48rem .62rem;border-radius:8px;border:1px solid transparent}
-[data-testid="stSidebar"] [data-testid="stRadio"] label *{color:#f5f5f5!important}
-[data-testid="stSidebar"] [data-testid="stRadio"] label:hover{background:#292929;border-color:#444}
-[data-testid="stSidebar"] [data-testid="stRadio"] [aria-checked="true"]{background:#303030;border-color:#777}
+[data-testid="stSidebar"] [data-testid="stTextArea"] textarea::placeholder{color:#c2ccda!important}
+[data-testid="stSidebar"] [data-testid="stRadio"] label{color:#f5f7fb!important;padding:.5rem .62rem;border-radius:9px;border:1px solid transparent}
+[data-testid="stSidebar"] [data-testid="stRadio"] label *{color:#f5f7fb!important}
+[data-testid="stSidebar"] [data-testid="stRadio"] label:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12)}
+[data-testid="stSidebar"] [data-testid="stRadio"] [aria-checked="true"]{background:rgba(89,143,232,.22);border-color:rgba(123,169,239,.4)}
 [data-testid="stSidebar"] [data-testid="stExpander"] summary,
-[data-testid="stSidebar"] [data-testid="stExpander"] summary *{color:#f5f5f5!important}
+[data-testid="stSidebar"] [data-testid="stExpander"] summary *{color:#f5f7fb!important}
 
-/* Existing monochrome dashboard layout */
-.rfp-topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:.35rem .25rem 1rem;border-bottom:1px solid #dedede;margin-bottom:1.15rem}
-.rfp-brand{font-size:1.2rem;font-weight:800;letter-spacing:-.035em;color:#111}
-.rfp-brand span{color:#555}
-.rfp-topmeta{font-size:.8rem;color:#737373;letter-spacing:.01em}
-.rfp-hero{position:relative;overflow:hidden;border:1px solid #dedede;border-radius:15px;padding:1.45rem 1.6rem;margin:.25rem 0 1rem;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.035)}
-.rfp-hero:before{content:"";position:absolute;right:0;top:0;width:7px;height:100%;background:#171717}
-.rfp-hero h1{position:relative;color:#111!important;font-size:clamp(1.8rem,3vw,2.35rem)!important;font-weight:800!important;letter-spacing:-.045em!important;margin:0 0 .3rem!important}
-.rfp-hero h1 span{color:#555}
-.rfp-hero p{position:relative;color:#6b7280!important;margin:.15rem 0 0;font-size:.95rem}
-.rfp-stage-pill{position:absolute;right:1.4rem;top:1.15rem;z-index:2;border:1px solid #d8d8d8;border-radius:10px;padding:.6rem .85rem;background:#f7f7f7;color:#222;font-weight:700;min-width:145px}
-.rfp-workflow{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;position:relative;background:#fff;border:1px solid #dedede;border-radius:14px;padding:1rem 1.15rem .85rem;margin:1.05rem 0 1.35rem;box-shadow:0 4px 14px rgba(0,0,0,.025)}
+/* Header, welcome panel and workflow */
+.rfp-topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:.35rem .25rem 1rem;border-bottom:1px solid var(--line);margin-bottom:1.05rem}
+.rfp-brand{font-size:1.12rem;font-weight:800;letter-spacing:-.035em;color:#172033}
+.rfp-brand span{color:#66758c}
+.rfp-topmeta{font-size:.78rem;color:#738096;letter-spacing:.01em}
+.rfp-hero{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.72);border-radius:22px;padding:1.7rem 1.85rem;margin:.25rem 0 1rem;
+ background:linear-gradient(112deg,rgba(255,255,255,.48),rgba(255,255,255,.25) 58%,rgba(194,231,239,.34));
+ backdrop-filter:blur(28px) saturate(155%);-webkit-backdrop-filter:blur(28px) saturate(155%);
+ box-shadow:0 18px 48px rgba(40,59,88,.09),inset 0 1px 0 rgba(255,255,255,.82)}
+.rfp-hero:after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(125deg,rgba(255,255,255,.28),transparent 38%,rgba(255,255,255,.07));}
+.rfp-hero:before{content:"";position:absolute;right:-55px;top:-110px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(80,148,220,.16),transparent 68%)}
+.rfp-hero h1{position:relative;color:#172033!important;font-size:clamp(1.8rem,3vw,2.35rem)!important;font-weight:800!important;letter-spacing:-.045em!important;margin:0 0 .3rem!important}
+.rfp-hero p{position:relative;color:#6d7b90!important;margin:.15rem 0 0;font-size:.94rem}
+.rfp-stage-pill{position:absolute;right:1.4rem;top:1.15rem;z-index:2;border:1px solid rgba(255,255,255,.72);border-radius:13px;padding:.7rem .95rem;background:rgba(255,255,255,.34);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);color:#27364b;font-weight:700;min-width:145px;box-shadow:0 8px 24px rgba(45,64,94,.07),inset 0 1px 0 rgba(255,255,255,.75)}
+.rfp-workflow{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;position:relative;background:rgba(255,255,255,.34);backdrop-filter:blur(26px) saturate(155%);-webkit-backdrop-filter:blur(26px) saturate(155%);border:1px solid rgba(255,255,255,.78);border-radius:19px;padding:1.05rem 1.2rem .9rem;margin:1.05rem 0 1.35rem;box-shadow:0 14px 36px rgba(40,59,88,.075),inset 0 1px 0 rgba(255,255,255,.82)}
 .rfp-step{display:flex;gap:10px;align-items:flex-start;min-width:0}
-.rfp-stepnum{flex:0 0 34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.95rem;background:#ededed;border:1px solid #d5d5d5;color:#222}
-.rfp-stepnum.done{background:#171717;border-color:#171717;color:#fff}
-.rfp-step strong{display:block;color:#171717;font-size:.86rem;margin:.1rem 0 .25rem}
-.rfp-step small{color:#777;font-size:.74rem}
-.rfp-flowbar{grid-column:1/-1;height:6px;border-radius:20px;background:#e8e8e8;overflow:hidden;margin:.15rem .15rem 0}
-.rfp-flowbar span{display:block;height:100%;border-radius:20px;background:#171717;transition:width .35s ease}
-.rfp-section-title{font-size:1.2rem;font-weight:800;color:#171717;margin:.65rem 0 .8rem;letter-spacing:-.025em}
-.rfp-kpis{display:grid;grid-template-columns:repeat(5,minmax(115px,1fr)) minmax(220px,1.55fr);gap:12px;margin-bottom:.7rem}
-.rfp-kpi{position:relative;overflow:hidden;min-height:112px;padding:.95rem 1rem;border-radius:12px;color:#171717;border:1px solid #dedede;border-top:3px solid #171717;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.035);transition:transform .18s ease,box-shadow .18s ease;animation:fadein .3s ease both}
-.rfp-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.07)}
-.rfp-kpi .ico{font-size:1.1rem;margin-bottom:.35rem;color:#555}
-.rfp-kpi .lab{font-size:.76rem;color:#666;font-weight:650}
-.rfp-kpi .val{font-size:1.85rem;line-height:1.2;font-weight:800;color:#111;margin-top:.2rem;letter-spacing:-.04em}
-.rfp-kpi.decision .val{font-size:1.18rem;letter-spacing:-.02em;margin-top:.55rem}
-.rfp-kpi.cyan,.rfp-kpi.purple,.rfp-kpi.amber,.rfp-kpi.green,.rfp-kpi.pink,.rfp-kpi.teal{--a:#fff;--b:#fff;--edge:#171717;--glow:rgba(0,0,0,.04)}
-.rfp-panel{border-radius:14px;padding:1.15rem 1.25rem;border:1px solid #dcdcdc;border-left:4px solid #222;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.025);margin-bottom:1rem}
-.rfp-panel h3{color:#171717!important;font-size:1.08rem!important;font-weight:800!important;margin:0 0 .8rem!important}
-.rfp-panel p,.rfp-panel li{color:#333;line-height:1.55}
-.rfp-panel .muted{color:#777;font-size:.85rem}
-.rfp-panel.pinkpanel{border-left-color:#171717;background:#fff}
-.rfp-panel.bluepanel{border-left-color:#555;background:#fff;min-height:155px}
-.rfp-verdict{display:inline-block;background:#ededed;border:1px solid #d5d5d5;color:#171717;padding:.25rem .6rem;border-radius:30px;font-size:.72rem;font-weight:800;vertical-align:middle}
+.rfp-stepnum{flex:0 0 34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.95rem;background:rgba(238,242,248,.95);border:1px solid #d9e1ec;color:#26364d}
+.rfp-stepnum.done{background:#172033;border-color:#172033;color:#fff}
+.rfp-step strong{display:block;color:#1b2940;font-size:.86rem;margin:.1rem 0 .25rem}
+.rfp-step small{color:#738096;font-size:.74rem}
+.rfp-flowbar{grid-column:1/-1;height:7px;border-radius:20px;background:rgba(135,151,174,.18);overflow:hidden;margin:.15rem .15rem 0}
+.rfp-flowbar span{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#3478f6,#35b8c5,#8b70df);transition:width .45s ease}
+.rfp-section-title{font-size:1.22rem;font-weight:800;color:#1b2940;margin:.65rem 0 .8rem;letter-spacing:-.025em}
+.rfp-import-shell{position:relative;overflow:hidden;margin:3.2rem auto 0;max-width:1080px;min-height:430px;padding:3.2rem 3.4rem;border:1px solid rgba(255,255,255,.82);border-radius:26px;background:linear-gradient(125deg,rgba(255,255,255,.58),rgba(255,255,255,.28) 58%,rgba(193,226,235,.34));backdrop-filter:blur(30px) saturate(165%);-webkit-backdrop-filter:blur(30px) saturate(165%);box-shadow:0 24px 65px rgba(42,61,91,.10),inset 0 1px 0 rgba(255,255,255,.9)}
+.rfp-import-shell:after{content:"";position:absolute;right:-95px;top:-145px;width:390px;height:390px;border-radius:50%;background:radial-gradient(circle,rgba(74,157,209,.18),transparent 68%);pointer-events:none}
+.rfp-import-eyebrow{position:relative;z-index:1;color:#3478a8;font-size:.74rem;font-weight:800;letter-spacing:.14em}
+.rfp-import-title{position:relative;z-index:1;margin:1rem 0 .65rem;color:#172033;font-size:clamp(2rem,4vw,3rem);font-weight:800;letter-spacing:-.055em}
+.rfp-import-copy{position:relative;z-index:1;max-width:720px;color:#66758c;font-size:1rem;line-height:1.75}
+.rfp-import-steps{position:relative;z-index:1;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:2.4rem 0 1.8rem}
+.rfp-import-steps>div{display:flex;flex-direction:column;gap:7px;min-height:112px;padding:1rem;border:1px solid rgba(255,255,255,.85);border-radius:15px;background:rgba(255,255,255,.35);backdrop-filter:blur(16px)}
+.rfp-import-steps span{color:#3478f6;font-size:.76rem;font-weight:800;letter-spacing:.08em}
+.rfp-import-steps b{color:#25344b;font-size:.9rem}
+.rfp-import-steps small{color:#7b899d;font-size:.76rem}
+.rfp-import-hint{position:relative;z-index:1;padding:1rem 1.1rem;border:1px solid rgba(52,120,246,.14);border-radius:12px;background:rgba(52,120,246,.07);color:#46617f;font-size:.86rem}
+@media(max-width:700px){.rfp-import-shell{margin:1.3rem auto 0;padding:1.5rem;min-height:0}.rfp-import-steps{grid-template-columns:1fr;gap:9px}.rfp-import-steps>div{min-height:0}}
+
+/* KPI cards — larger, soft glass with restrained color accents */
+.rfp-kpis{display:grid;grid-template-columns:repeat(5,minmax(125px,1fr)) minmax(230px,1.65fr);gap:13px;margin-bottom:.7rem}
+.rfp-kpi{position:relative;overflow:hidden;min-height:142px;padding:1.1rem 1.15rem;border-radius:18px;color:#172033;
+ border:1px solid rgba(255,255,255,.76);border-top:3px solid var(--accent,#7c8ba2);
+ background:linear-gradient(145deg,rgba(255,255,255,.46),rgba(255,255,255,.20));
+ backdrop-filter:blur(27px) saturate(165%);-webkit-backdrop-filter:blur(27px) saturate(165%);
+ box-shadow:0 14px 34px rgba(44,64,94,.075),inset 0 1px 0 rgba(255,255,255,.86);
+ transition:transform .24s ease,box-shadow .24s ease,border-color .24s ease;animation:fadein .35s ease both}
+.rfp-kpi:after{content:"";position:absolute;right:-30px;top:-42px;width:118px;height:118px;border-radius:50%;background:var(--wash,rgba(52,120,246,.12));filter:blur(1px);box-shadow:0 0 38px var(--wash,rgba(52,120,246,.12))}
+.rfp-kpi:before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,.30),transparent 42%,rgba(255,255,255,.05));}
+.rfp-kpi:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.98);box-shadow:0 20px 42px rgba(44,64,94,.14),inset 0 1px 0 rgba(255,255,255,.95)}
+.rfp-kpi .ico{font-size:1.22rem;margin-bottom:.42rem;color:var(--accent,#53647c);position:relative;z-index:1}
+.rfp-kpi .lab{font-size:.78rem;color:#64748b;font-weight:700;position:relative;z-index:1}
+.rfp-kpi .val{font-size:2.05rem;line-height:1.15;font-weight:800;color:#172033;margin-top:.25rem;letter-spacing:-.045em;position:relative;z-index:1}
+.rfp-kpi.decision .val{font-size:1.25rem;letter-spacing:-.02em;margin-top:.62rem}
+.rfp-kpi.cyan{--accent:#168fa7;--wash:rgba(38,185,200,.12)}
+.rfp-kpi.purple{--accent:#7860c8;--wash:rgba(139,112,223,.12)}
+.rfp-kpi.amber{--accent:#b97813;--wash:rgba(224,163,67,.13)}
+.rfp-kpi.green{--accent:#16834b;--wash:rgba(36,168,104,.12)}
+.rfp-kpi.pink{--accent:#c04c83;--wash:rgba(218,92,151,.12)}
+.rfp-kpi.teal{--accent:#168fa7;--wash:rgba(38,185,200,.12)}
+
+/* Glass panels, decision and recommendation */
+.rfp-panel{border-radius:19px;padding:1.25rem 1.35rem;border:1px solid rgba(255,255,255,.78);border-left:4px solid #8a9ab0;
+ background:linear-gradient(140deg,rgba(255,255,255,.43),rgba(255,255,255,.22));backdrop-filter:blur(27px) saturate(155%);-webkit-backdrop-filter:blur(27px) saturate(155%);
+ box-shadow:0 15px 36px rgba(44,64,94,.075),inset 0 1px 0 rgba(255,255,255,.82);margin-bottom:1rem}
+.rfp-panel h3{color:#1b2940!important;font-size:1.08rem!important;font-weight:800!important;margin:0 0 .8rem!important}
+.rfp-panel p,.rfp-panel li{color:#344258;line-height:1.58}
+.rfp-panel .muted{color:#78869a;font-size:.85rem}
+.rfp-panel.pinkpanel{border-left-color:#8b70df;background:linear-gradient(135deg,rgba(255,255,255,.48),rgba(226,218,255,.27))}
+.rfp-panel.bluepanel{border-left-color:#3478f6;background:rgba(255,255,255,.34);min-height:145px}
+.rfp-verdict{display:inline-block;background:#edf0f4;border:1px solid #d7dee8;color:#29384d;padding:.27rem .65rem;border-radius:30px;font-size:.72rem;font-weight:800;vertical-align:middle}
 .rfp-verdict.bid{background:#e7f6ec!important;border-color:#8bc99d!important;color:#137333!important}
 .rfp-verdict.review{background:#fff3df!important;border-color:#e9bd72!important;color:#9a5b00!important}
 .rfp-verdict.no-bid{background:#fdeaea!important;border-color:#e5a0a0!important;color:#b42318!important}
 .rfp-score.bid{color:#137333!important}.rfp-score.review{color:#b7791f!important}.rfp-score.no-bid{color:#b42318!important}
 .rfp-scorebar.bid span{background:#16803c!important}.rfp-scorebar.review span{background:#d99016!important}.rfp-scorebar.no-bid span{background:#c62828!important}
-.rfp-recommendation-note{font-size:.82rem;font-weight:600;margin-top:.35rem}
+.rfp-recommendation-note{font-size:.82rem;font-weight:650;margin-top:.35rem}
 .rfp-recommendation-note.bid{color:#137333!important}.rfp-recommendation-note.review{color:#9a5b00!important}.rfp-recommendation-note.no-bid{color:#b42318!important}
-.rfp-score{font-size:2.5rem;font-weight:800;letter-spacing:-.05em;color:#111;margin:.4rem 0}
-.rfp-scorebar{height:10px;border-radius:20px;background:#e8e8e8;overflow:hidden;margin:.8rem 0}
-.rfp-scorebar span{display:block;height:100%;background:#171717;border-radius:20px}
-.rfp-risk{border-left-color:#555}.rfp-strength{border-left-color:#999}
+.rfp-score{font-size:2.55rem;font-weight:800;letter-spacing:-.05em;color:#172033;margin:.4rem 0}
+.rfp-scorebar{height:10px;border-radius:20px;background:#e5eaf1;overflow:hidden;margin:.8rem 0}
+.rfp-scorebar span{display:block;height:100%;background:#3478f6;border-radius:20px}
+.rfp-risk{border-left-color:#c04c55}.rfp-strength{border-left-color:#16834b}
 .rfp-two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-[data-testid="stMetric"]{background:#fff;border:1px solid #ddd;border-radius:12px;padding:.8rem!important}
-[data-testid="stMetricLabel"],[data-testid="stMetricLabel"] p,[data-testid="stMetricValue"],[data-testid="stMetricValue"] div{color:#171717!important}
-[data-testid="stVerticalBlockBorderWrapper"]{background:#fff!important;border:1px solid #ddd!important;border-radius:13px!important;box-shadow:0 4px 14px rgba(0,0,0,.025)!important}
+[data-testid="stMetric"]{background:rgba(255,255,255,.34);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border:1px solid rgba(255,255,255,.78);border-radius:16px;padding:.9rem!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 10px 26px rgba(44,64,94,.055)}
+[data-testid="stMetricLabel"],[data-testid="stMetricLabel"] p,[data-testid="stMetricValue"],[data-testid="stMetricValue"] div{color:#172033!important}
+[data-testid="stVerticalBlockBorderWrapper"]{background:rgba(255,255,255,.32)!important;border:1px solid rgba(255,255,255,.78)!important;border-radius:17px!important;box-shadow:0 12px 30px rgba(44,64,94,.055),inset 0 1px 0 rgba(255,255,255,.82)!important;backdrop-filter:blur(24px) saturate(150%)!important;-webkit-backdrop-filter:blur(24px) saturate(150%)!important}
 
-/* Main buttons and form widgets */
-.stButton button,.stDownloadButton button{border-radius:8px!important;border:1px solid #171717!important;background:#171717!important;color:#fff!important;font-weight:650!important;transition:all .18s ease!important}
+/* Chart containers and native chart typography */
+.rfp-chart-title{font-size:1rem;font-weight:800;color:#1b2940;margin:.15rem 0 .25rem}
+.rfp-chart-subtitle{font-size:.78rem;color:#78869a;margin-bottom:.45rem}
+.rfp-donut-wrap{display:flex;align-items:center;gap:22px;min-height:190px;padding:.5rem .3rem}
+.rfp-donut{width:154px;height:154px;border-radius:50%;flex:0 0 154px;position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
+.rfp-donut:after{content:"";position:absolute;inset:29px;border-radius:50%;background:rgba(246,250,255,.78);backdrop-filter:blur(12px);box-shadow:0 0 0 1px rgba(130,148,174,.16),inset 0 1px 0 rgba(255,255,255,.8)}
+.rfp-donut-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:1;color:#172033;font-weight:800}
+.rfp-donut-center strong{font-size:1.55rem;line-height:1.2}
+.rfp-donut-center span{font-size:.68rem;color:#78869a;font-weight:650}
+.rfp-legend{display:flex;flex-direction:column;gap:11px;min-width:0}
+.rfp-legend-row{display:flex;align-items:center;gap:8px;color:#44536a;font-size:.82rem}
+.rfp-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 9px}
+.rfp-legend-row b{margin-left:auto;color:#172033;padding-left:10px}
+.rfp-chart-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.78);border-radius:19px;background:linear-gradient(145deg,rgba(255,255,255,.43),rgba(255,255,255,.20));backdrop-filter:blur(27px) saturate(160%);-webkit-backdrop-filter:blur(27px) saturate(160%);padding:1.05rem 1.1rem .75rem;box-shadow:0 15px 36px rgba(44,64,94,.065),inset 0 1px 0 rgba(255,255,255,.85);margin:.2rem 0 1rem;min-height:245px}
+.rfp-chart-card-tall{min-height:100%;height:100%;box-sizing:border-box}
+.rfp-chart-card:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(125deg,rgba(255,255,255,.23),transparent 44%);border-radius:inherit}
+.rfp-chart-card [data-testid="stVegaLiteChart"],.rfp-chart-card [data-testid="stArrowVegaLiteChart"]{background:transparent!important}
+
+.rfp-html-chart{width:100%;overflow:hidden}
+.rfp-hbar-list{display:flex;flex-direction:column;gap:13px;padding:.65rem .1rem .35rem}
+.rfp-hbar-row{display:grid;grid-template-columns:minmax(105px,1.1fr) minmax(80px,2fr) 32px;gap:10px;align-items:center}
+.rfp-hbar-label{font-size:.76rem;color:#526178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rfp-hbar-track{height:11px;border-radius:20px;background:#e9eef5;overflow:hidden}
+.rfp-hbar-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#3478f6,#42b7c4)}
+.rfp-hbar-value{font-size:.76rem;color:#26364d;font-weight:750;text-align:right}
+.rfp-empty-chart{height:170px;display:flex;align-items:center;justify-content:center;text-align:center;color:#8491a4;font-size:.82rem}
+.rfp-line-svg{display:block;width:100%;height:auto;max-height:205px}
+.rfp-chart-foot{font-size:.7rem;color:#8793a5;margin-top:.15rem}
+.rfp-donut-wrap{min-height:185px}
+@media(max-width:700px){.rfp-hbar-row{grid-template-columns:90px minmax(60px,2fr) 25px;gap:7px}.rfp-hbar-label{font-size:.7rem}}
+
+
+
+/* Frosted-glass consistency and subtle motion */
+.rfp-hero,.rfp-workflow,.rfp-kpi,.rfp-panel,.rfp-chart-card,.rfp-stage-pill{
+ -webkit-backdrop-filter:blur(26px) saturate(155%);
+}
+@keyframes glassFloatIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.rfp-hero,.rfp-workflow,.rfp-kpi,.rfp-panel,.rfp-chart-card{animation:glassFloatIn .42s ease both}
+/* Refined motion layer: staggered entrance, gentle hover depth and chart reveals */
+.rfp-hero{animation:heroReveal .65s cubic-bezier(.2,.75,.25,1) both}
+.rfp-hero:before{animation:ambientDrift 9s ease-in-out infinite alternate}
+.rfp-workflow{animation:glassFloatIn .52s .08s ease both}
+.rfp-kpi{animation:cardRise .52s cubic-bezier(.2,.75,.25,1) both}
+.rfp-kpi:nth-child(1){animation-delay:.04s}.rfp-kpi:nth-child(2){animation-delay:.09s}
+.rfp-kpi:nth-child(3){animation-delay:.14s}.rfp-kpi:nth-child(4){animation-delay:.19s}
+.rfp-kpi:nth-child(5){animation-delay:.24s}.rfp-kpi:nth-child(6){animation-delay:.29s}
+.rfp-kpi,.rfp-panel,.rfp-chart-card{will-change:transform}
+.rfp-panel,.rfp-chart-card{transition:transform .28s cubic-bezier(.2,.75,.25,1),box-shadow .28s ease,border-color .28s ease}
+.rfp-panel:hover,.rfp-chart-card:hover{transform:translateY(-3px);box-shadow:0 20px 42px rgba(44,64,94,.12),inset 0 1px 0 rgba(255,255,255,.9)}
+.rfp-kpi:hover{transform:translateY(-6px) scale(1.012)}
+.rfp-chart-card:after,.rfp-panel:after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(112deg,transparent 20%,rgba(255,255,255,.30) 48%,transparent 72%);transform:translateX(-130%);opacity:0}
+.rfp-chart-card:hover:after,.rfp-panel:hover:after{opacity:1;animation:softShimmer .9s ease}
+.rfp-hbar-fill{transform-origin:left center;animation:barReveal .9s cubic-bezier(.18,.72,.25,1) both}
+.rfp-hbar-row:nth-child(2) .rfp-hbar-fill{animation-delay:.08s}.rfp-hbar-row:nth-child(3) .rfp-hbar-fill{animation-delay:.16s}
+.rfp-hbar-row:nth-child(4) .rfp-hbar-fill{animation-delay:.24s}.rfp-hbar-row:nth-child(5) .rfp-hbar-fill{animation-delay:.32s}
+.rfp-donut{animation:donutReveal .8s cubic-bezier(.2,.75,.25,1) both}
+.rfp-scorebar span{transform-origin:left center;animation:scoreReveal 1s .2s cubic-bezier(.2,.75,.25,1) both}
+.rfp-verdict{animation:badgeReveal .45s .25s ease both}
+.rfp-flowbar span{background-size:200% 100%;animation:flowShimmer 4s linear infinite}
+@keyframes heroReveal{from{opacity:0;transform:translateY(12px) scale(.992)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes cardRise{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ambientDrift{from{transform:translate3d(0,0,0) scale(.94)}to{transform:translate3d(-24px,18px,0) scale(1.08)}}
+@keyframes softShimmer{0%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+@keyframes barReveal{from{transform:scaleX(0);opacity:.45}to{transform:scaleX(1);opacity:1}}
+@keyframes donutReveal{from{opacity:.4;transform:scale(.82) rotate(-35deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes scoreReveal{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes badgeReveal{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes flowShimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@media(prefers-reduced-motion:reduce){
+ .rfp-hero,.rfp-workflow,.rfp-kpi,.rfp-panel,.rfp-chart-card,.rfp-donut,.rfp-hbar-fill,.rfp-scorebar span,.rfp-verdict,.rfp-flowbar span{animation:none!important;transition:none!important;will-change:auto!important}
+ .rfp-panel:hover,.rfp-chart-card:hover,.rfp-kpi:hover{transform:none!important}
+}
+
+/* Main-window document importer */
+[data-testid="stMain"] [data-testid="stFileUploader"] section{
+ background:rgba(255,255,255,.72)!important;
+ border:1px dashed rgba(65,105,155,.48)!important;
+ border-radius:14px!important;
+ padding:1rem!important;
+}
+[data-testid="stMain"] [data-testid="stFileUploader"] section,
+[data-testid="stMain"] [data-testid="stFileUploader"] section *{
+ color:#26364d!important;-webkit-text-fill-color:#26364d!important;opacity:1!important;
+}
+[data-testid="stMain"] [data-testid="stFileUploader"] button{
+ background:#1b2940!important;color:#fff!important;border:1px solid #1b2940!important;
+ border-radius:9px!important;font-weight:700!important;
+}
+[data-testid="stMain"] [data-testid="stFileUploader"] button *{
+ color:#fff!important;-webkit-text-fill-color:#fff!important;
+}
+
+/* Main controls — visible text on every state */
+.stButton button,.stDownloadButton button{border-radius:9px!important;border:1px solid #26364d!important;background:#1b2940!important;color:#fff!important;font-weight:700!important;transition:all .18s ease!important}
 .stButton button *, .stDownloadButton button *{color:#fff!important;-webkit-text-fill-color:#fff!important}
-.stButton button:hover,.stDownloadButton button:hover{background:#3b3b3b!important;border-color:#3b3b3b!important;transform:translateY(-1px)}
-.stButton button:disabled,.stDownloadButton button:disabled{background:#e5e5e5!important;border-color:#d0d0d0!important;color:#777!important;opacity:1!important}
-.stButton button:disabled *,.stDownloadButton button:disabled *{color:#777!important;-webkit-text-fill-color:#777!important}
-.stTextInput input,.stTextArea textarea,[data-testid="stSelectbox"] [data-baseweb="select"] > div,[data-testid="stMultiSelect"] [data-baseweb="select"] > div{background:#fff!important;color:#171717!important;-webkit-text-fill-color:#171717!important;border:1px solid #d0d0d0!important;border-radius:8px!important}
-[data-testid="stSelectbox"] [data-baseweb="select"] *,[data-testid="stMultiSelect"] [data-baseweb="select"] *,[data-testid="stSelectbox"] input,[data-testid="stMultiSelect"] input{color:#171717!important;-webkit-text-fill-color:#171717!important;opacity:1!important}
-[data-testid="stSelectbox"] svg,[data-testid="stMultiSelect"] svg{fill:#171717!important;color:#171717!important}
-.stTextInput input::placeholder,.stTextArea textarea::placeholder{color:#888!important;-webkit-text-fill-color:#888!important}
-[data-testid="stDataFrame"],[data-testid="stDataEditor"]{border:1px solid #ddd;border-radius:10px;overflow:hidden}
-[data-testid="stAlert"]{border-radius:10px!important}
-[data-testid="stCaptionContainer"] p{color:#777!important}
-hr{border-color:#e2e2e2!important}
-@keyframes fadein{from{opacity:.75;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-@media(max-width:1050px){.rfp-kpis{grid-template-columns:repeat(3,1fr)}.rfp-workflow{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:650px){[data-testid="stMainBlockContainer"],.main .block-container{padding:.65rem .65rem 2rem!important}.rfp-kpis{grid-template-columns:repeat(2,1fr)}.rfp-two-col{grid-template-columns:1fr}.rfp-stage-pill{position:relative;right:auto;top:auto;margin-top:.8rem;display:inline-block}.rfp-workflow{grid-template-columns:1fr}.rfp-topbar{flex-wrap:wrap}}
+.stButton button:hover,.stDownloadButton button:hover{background:#2e4668!important;border-color:#2e4668!important;transform:translateY(-1px)}
+.stButton button:disabled,.stDownloadButton button:disabled{background:#e1e6ee!important;border-color:#d0d8e3!important;color:#758197!important;opacity:1!important}
+.stButton button:disabled *,.stDownloadButton button:disabled *{color:#758197!important;-webkit-text-fill-color:#758197!important}
+.stTextInput input,.stTextArea textarea,[data-testid="stSelectbox"] [data-baseweb="select"]>div,[data-testid="stMultiSelect"] [data-baseweb="select"]>div{
+ background:rgba(255,255,255,.88)!important;color:#172033!important;-webkit-text-fill-color:#172033!important;border:1px solid #d5deea!important;border-radius:9px!important
+}
+[data-testid="stSelectbox"] [data-baseweb="select"] *,[data-testid="stMultiSelect"] [data-baseweb="select"] *,
+[data-testid="stSelectbox"] input,[data-testid="stMultiSelect"] input{color:#172033!important;-webkit-text-fill-color:#172033!important;opacity:1!important}
+[data-testid="stSelectbox"] svg,[data-testid="stMultiSelect"] svg{fill:#172033!important;color:#172033!important}
+.stTextInput input::placeholder,.stTextArea textarea::placeholder{color:#8491a4!important;-webkit-text-fill-color:#8491a4!important}
+[data-testid="stDataFrame"],[data-testid="stDataEditor"]{border:1px solid rgba(150,166,188,.35);border-radius:11px;overflow:hidden}
+[data-testid="stAlert"]{border-radius:12px!important}
+[data-testid="stCaptionContainer"] p{color:#7c899c!important}
+hr{border-color:rgba(126,145,171,.25)!important}
+@keyframes fadein{from{opacity:.65;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1150px){.rfp-kpis{grid-template-columns:repeat(3,1fr)}.rfp-workflow{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){[data-testid="stMainBlockContainer"],.main .block-container{padding:.65rem .65rem 2rem!important}.rfp-kpis{grid-template-columns:repeat(2,1fr)}.rfp-two-col{grid-template-columns:1fr}.rfp-stage-pill{position:relative;right:auto;top:auto;margin-top:.8rem;display:inline-block}.rfp-workflow{grid-template-columns:1fr}.rfp-topbar{flex-wrap:wrap}.rfp-donut-wrap{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
-
 </style>
+
 """, unsafe_allow_html=True)
 
 
@@ -239,35 +380,92 @@ def metric_card(icon,label,value,colour,decision=False):
 
 def main():
     init_state(); initialise_database()
-    # Simple, always-visible workflow controls: upload -> review -> capability analysis.
+    # Import-first workspace: keep the sidebar focused until a document is processed.
     with st.sidebar:
         st.markdown("<div style='font-size:1.08rem;font-weight:800;letter-spacing:-.035em;margin:.25rem 0 1rem;color:#fff'>RFP INTELLIGENCE</div>",unsafe_allow_html=True)
-        nav=st.radio("WORKSPACE",["⌂  Dashboard","▤  Requirements","◈  Capability Match","⚠  Risk Analysis","◎  Decision Centre","▣  Proposal Support","▦  Opportunities"],label_visibility="collapsed",key="main_navigation")
-        st.markdown("<div style='height:1px;background:#444;margin:1rem 0'></div>",unsafe_allow_html=True)
 
-        st.subheader("1. Opportunity intake")
-        up=st.file_uploader("Upload RFP / tender document",type=["pdf","xls","xlsx","xlx"],key="rfp_upload")
-        if up and st.button("Process document",type="primary",use_container_width=True): process_upload(up)
+        has_document = bool(st.session_state.get("file_name"))
+        if has_document:
+            nav=st.radio("WORKSPACE",["⌂  Dashboard","▤  Requirements","◈  Capability Match","⚠  Risk Analysis","◎  Decision Centre","▣  Proposal Support","▦  Opportunities"],label_visibility="collapsed",key="main_navigation")
+            st.markdown("<div style='height:1px;background:#444;margin:1rem 0'></div>",unsafe_allow_html=True)
+        else:
+            nav="⌂  Dashboard"
 
-        st.markdown("<div style='height:1px;background:#444;margin:1.1rem 0'></div>",unsafe_allow_html=True)
-        st.subheader("2. Company capability profile")
-        cap=st.text_area("One capability per line",value="\n".join(DEFAULT_CAPABILITIES),height=155,key="capability_profile",help="Edit this profile to reflect the capabilities relevant to the current tender.")
-        if st.button("Run capability analysis",use_container_width=True,disabled=not bool(st.session_state["requirements"])): run_analysis(cap)
+        # The document importer lives in the main workspace, not in the sidebar.
+        if st.session_state.get("file_name"):
+            st.markdown("<div style='height:1px;background:#444;margin:1.1rem 0'></div>",unsafe_allow_html=True)
+            st.subheader("Company capability profile")
+            cap=st.text_area("One capability per line",value="\n".join(DEFAULT_CAPABILITIES),height=155,key="capability_profile",help="Edit this profile to reflect the capabilities relevant to the current tender.")
+            if st.button("Run capability analysis",use_container_width=True,disabled=not bool(st.session_state["requirements"])):
+                run_analysis(cap)
 
-        st.markdown("<div style='height:1px;background:#444;margin:1.1rem 0'></div>",unsafe_allow_html=True)
-        stage_options=["New","Analysis","Review","Bid Decision","Proposal","Submitted","Won","Lost"]
-        stage=st.selectbox("Opportunity stage",stage_options,index=stage_options.index(st.session_state["opportunity_stage"]) if st.session_state["opportunity_stage"] in stage_options else 0)
-        st.session_state["opportunity_stage"]=stage
-        st.caption(f"Human decision: **{st.session_state['human_decision']}**")
+            st.markdown("<div style='height:1px;background:#444;margin:1.1rem 0'></div>",unsafe_allow_html=True)
+            stage_options=["New","Analysis","Review","Bid Decision","Proposal","Submitted","Won","Lost"]
+            stage=st.selectbox("Opportunity stage",stage_options,index=stage_options.index(st.session_state["opportunity_stage"]) if st.session_state["opportunity_stage"] in stage_options else 0)
+            st.session_state["opportunity_stage"]=stage
+            st.caption(f"Human decision: **{st.session_state['human_decision']}**")
 
-        with st.expander("Saved opportunities",expanded=False):
-            saved=list_opportunities(); labels=["Create new / current opportunity"]+[f"#{x['id']} · {x['file_name']} · {x['stage']}" for x in saved]
-            selected=st.selectbox("Load opportunity",labels)
-            if st.button("Load selected",use_container_width=True,disabled=selected==labels[0]): load_saved(int(saved[labels.index(selected)-1]["id"]))
-            if st.button("Save current opportunity",use_container_width=True,disabled=not bool(st.session_state["file_name"])): save_current()
-            if st.button("Clear current opportunity",use_container_width=True):
-                for k in ("pages","requirements","matches","risks","questions","proposal"): st.session_state[k]=[]
-                st.session_state.update({"recommendation":{},"file_name":"","opportunity_stage":"New","human_decision":"Pending human review","decision_notes":"","opportunity_id":None}); st.rerun()
+            with st.expander("Saved opportunities",expanded=False):
+                saved=list_opportunities()
+                labels=["Create new / current opportunity"]+[f"#{x['id']} · {x['file_name']} · {x['stage']}" for x in saved]
+                selected=st.selectbox("Load opportunity",labels)
+                if st.button("Load selected",use_container_width=True,disabled=selected==labels[0]):
+                    load_saved(int(saved[labels.index(selected)-1]["id"]))
+                if st.button("Save current opportunity",use_container_width=True,disabled=not bool(st.session_state["file_name"])):
+                    save_current()
+                if st.button("Clear current opportunity",use_container_width=True):
+                    for k in ("pages","requirements","matches","risks","questions","proposal"):
+                        st.session_state[k]=[]
+                    st.session_state.update({"recommendation":{},"file_name":"","opportunity_stage":"New","human_decision":"Pending human review","decision_notes":"","opportunity_id":None})
+                    st.rerun()
+
+    # Before import, show a focused welcome state and a central document importer —
+    # no empty KPI cards, workflow cards, charts, or analysis panels.
+    # workflow steps, charts, or analysis panels.
+    if not st.session_state.get("file_name"):
+        st.markdown(
+            "<div class='rfp-topbar'><div class='rfp-brand'>RFP <span>Intelligence</span></div>"
+            "<div class='rfp-topmeta'>Procurement Intelligence Workspace</div>"
+            "<div class='rfp-topmeta'>Evidence-led · Human-approved</div></div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            "<section class='rfp-import-shell'>"
+            "<div class='rfp-import-eyebrow'>PROCUREMENT WORKSPACE</div>"
+            "<div class='rfp-import-title'>Start with your tender document</div>"
+            "<p class='rfp-import-copy'>Import an RFP or tender to extract requirements, compare company capabilities, identify risks and prepare an evidence-based bid recommendation.</p>"
+            "<div class='rfp-import-steps'>"
+            "<div><span>01</span><b>Import document</b><small>PDF, XLS or XLSX</small></div>"
+            "<div><span>02</span><b>Review requirements</b><small>Extracted with source references</small></div>"
+            "<div><span>03</span><b>Analyse opportunity</b><small>Capability, risks and bid signals</small></div>"
+            "</div>"
+            "</section>",
+            unsafe_allow_html=True,
+        )
+
+        # Main-window upload area: wide, visible and easy to use.
+        left, center, right = st.columns([1, 4, 1])
+        with center:
+            with st.container(border=True):
+                st.markdown("### Import your RFP / tender document")
+                st.caption("Choose a PDF, Excel XLS or XLSX file. Your dashboard will appear after processing.")
+                main_upload = st.file_uploader(
+                    "Select document",
+                    type=["pdf", "xls", "xlsx", "xlx"],
+                    key="rfp_upload_main",
+                    help="Supported formats: PDF, XLS and XLSX",
+                )
+                if st.button(
+                    "Import & process document",
+                    type="primary",
+                    use_container_width=True,
+                    disabled=main_upload is None,
+                    key="main_import_process_button",
+                ):
+                    process_upload(main_upload)
+                    if st.session_state.get("file_name"):
+                        st.rerun()
+        return
 
     reqs=st.session_state["requirements"]; matches=st.session_state["matches"]; risks=st.session_state["risks"]; rec=st.session_state["recommendation"]
     stage=st.session_state["opportunity_stage"]
@@ -306,13 +504,132 @@ def main():
                     verdict = "RECOMMENDATION: REVIEW"
                     verdict_class = "review"
                     recommendation_note = "Partial / incomplete evidence — clarify gaps and risks before deciding."
-                col1,col2=st.columns([1.2,1])
+                # Prepare chart data before laying out the dashboard.
+                category_counts=pd.Series([m.get("Category","Other") for m in matches]).value_counts().head(6)
+                if not category_counts.empty:
+                    max_category=max(int(category_counts.max()),1)
+                    category_rows=[]
+                    for label,count in category_counts.items():
+                        width=max(3,round(int(count)/max_category*100))
+                        category_rows.append(
+                            f"<div class='rfp-hbar-row'><div class='rfp-hbar-label' title='{safe(label)}'>{safe(label)}</div>"
+                            f"<div class='rfp-hbar-track'><div class='rfp-hbar-fill' style='width:{width}%'></div></div>"
+                            f"<div class='rfp-hbar-value'>{int(count)}</div></div>"
+                        )
+                    category_chart="".join(category_rows)
+                else:
+                    category_chart="<div class='rfp-empty-chart'>Category data will appear after capability analysis.</div>"
+
+                type_counts=pd.Series([str(x.get("Type","Needs Verification")) for x in reqs]).value_counts()
+                type_palette={"Mandatory":"#3478f6","Optional":"#26b9c8","Needs Verification":"#8b70df"}
+                donut_total=int(type_counts.sum())
+                if donut_total:
+                    donut_parts=[]; legend_parts=[]; cursor=0.0
+                    for label,count in type_counts.items():
+                        colour=type_palette.get(label,"#9aa7b8")
+                        end_angle=cursor+(float(count)/donut_total*100)
+                        donut_parts.append(f"{colour} {cursor:.2f}% {end_angle:.2f}%")
+                        legend_parts.append(
+                            f"<div class='rfp-legend-row'><span class='rfp-dot' style='background:{colour}'></span>"
+                            f"<span>{safe(label)}</span><b>{int(count)}</b></div>"
+                        )
+                        cursor=end_angle
+                    donut_gradient="conic-gradient("+", ".join(donut_parts)+")"
+                    donut_chart=(
+                        f"<div class='rfp-donut-wrap'><div class='rfp-donut' style='background:{donut_gradient}'>"
+                        f"<div class='rfp-donut-center'><strong>{donut_total}</strong><span>Requirements</span></div></div>"
+                        f"<div class='rfp-legend'>{''.join(legend_parts)}</div></div>"
+                    )
+                else:
+                    donut_chart="<div class='rfp-empty-chart'>No requirement types found yet.</div>"
+
+                # Count requirements by source page / worksheet.
+                source_counts={}
+                for item in reqs:
+                    source=item.get("Source Page",item.get("Source",item.get("Page",item.get("page",""))))
+                    if source not in (None,""):
+                        source=str(source)
+                        source_counts[source]=source_counts.get(source,0)+1
+
+                if source_counts:
+                    source_items=list(source_counts.items())
+                    vals=[int(v) for _,v in source_items]
+                    labels=[str(k) for k,_ in source_items]
+                    width_svg=560; height_svg=190; left=42; right=18; top=16; bottom=42
+                    plot_w=width_svg-left-right; plot_h=height_svg-top-bottom
+                    max_val=max(vals+[1])
+                    points=[]
+                    for idx,val in enumerate(vals):
+                        x=left+(plot_w/2 if len(vals)==1 else idx*plot_w/(len(vals)-1))
+                        y=top+plot_h-(val/max_val)*plot_h
+                        points.append((x,y))
+                    polyline=" ".join(f"{x:.1f},{y:.1f}" for x,y in points)
+                    grid_parts=[]
+                    for fraction in (0,0.5,1):
+                        gy=top+plot_h-(fraction*plot_h)
+                        grid_parts.append(f"<line x1='{left}' y1='{gy:.1f}' x2='{width_svg-right}' y2='{gy:.1f}' stroke='#e6ebf2' stroke-width='1'/>")
+                    point_parts=[]
+                    for idx,((x,y),val,label) in enumerate(zip(points,vals,labels)):
+                        point_parts.append(f"<circle cx='{x:.1f}' cy='{y:.1f}' r='5' fill='#26a6b8' stroke='white' stroke-width='2'/>")
+                        if len(vals)<=6:
+                            point_parts.append(f"<text x='{x:.1f}' y='{height_svg-16}' text-anchor='middle' font-size='10' fill='#758399'>{safe(label[:13])}</text>")
+                        point_parts.append(f"<text x='{x:.1f}' y='{y-11:.1f}' text-anchor='middle' font-size='11' font-weight='700' fill='#344258'>{val}</text>")
+                    if len(points)==1:
+                        line_markup=f"<line x1='{left+8}' y1='{points[0][1]:.1f}' x2='{width_svg-right-8}' y2='{points[0][1]:.1f}' stroke='#26a6b8' stroke-width='3' stroke-linecap='round' opacity='.45'/>"
+                        source_note="One source unit in this document — trend will appear when multiple pages or sheets are available."
+                    else:
+                        line_markup=f"<polyline points='{polyline}' fill='none' stroke='#26a6b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/>"
+                        source_note=f"{len(vals)} source units"
+                    line_chart=(
+                        f"<svg class='rfp-line-svg' viewBox='0 0 {width_svg} {height_svg}' role='img' aria-label='Requirements by source page'>"
+                        f"{''.join(grid_parts)}{line_markup}{''.join(point_parts)}</svg>"
+                        f"<div class='rfp-chart-foot'>{safe(source_note)}</div>"
+                    )
+                else:
+                    line_chart="<div class='rfp-empty-chart'>Source page references will appear here when available.</div>"
+
+                # Balanced dashboard: score and category chart share the first row;
+                # composition and source-page trend share the second row.
+                col1,col2=st.columns([1.08,1],gap="large")
                 with col1:
-                    st.markdown(f"<div class='rfp-panel pinkpanel'><h3>◎ &nbsp; AI Bid Intelligence <span class='rfp-verdict {verdict_class}'>{safe(verdict)}</span></h3><div style='display:grid;grid-template-columns:1fr 1fr;gap:1rem'><div><div class='rfp-score {verdict_class}'>{score} / 100</div><div>Feasibility Score</div><div class='rfp-scorebar {verdict_class}'><span style='width:{max(0,min(100,score))}%'></span></div><div class='muted'>Evidence-based feasibility estimate</div><div class='rfp-recommendation-note {verdict_class}'>{safe(recommendation_note)}</div></div><div style='border-left:1px solid #dedede;padding-left:1.1rem'><div style='margin:.35rem 0'>▱ &nbsp; <b>{met} / {mt} Met</b><br><span class='muted'>Mandatory Compliance</span></div><div style='margin:.65rem 0'>⚠ &nbsp; <b>{hr} Risks</b><br><span class='muted'>High-Severity Risks</span></div><div style='margin:.65rem 0'>▤ &nbsp; <b>{verify} Items</b><br><span class='muted'>Clarifications Needed</span></div></div></div></div>",unsafe_allow_html=True)
+                    st.markdown(
+                        f"<div class='rfp-panel pinkpanel'><h3>◎ &nbsp; AI Bid Intelligence <span class='rfp-verdict {verdict_class}'>{safe(verdict)}</span></h3>"
+                        f"<div style='display:grid;grid-template-columns:1fr 1fr;gap:1rem'>"
+                        f"<div><div class='rfp-score {verdict_class}'>{score} / 100</div><div>Feasibility Score</div>"
+                        f"<div class='rfp-scorebar {verdict_class}'><span style='width:{max(0,min(100,score))}%'></span></div>"
+                        f"<div class='muted'>Evidence-based feasibility estimate</div>"
+                        f"<div class='rfp-recommendation-note {verdict_class}'>{safe(recommendation_note)}</div></div>"
+                        f"<div style='border-left:1px solid rgba(126,145,171,.25);padding-left:1.1rem'>"
+                        f"<div style='margin:.35rem 0'>▱ &nbsp; <b>{met} / {mt} Met</b><br><span class='muted'>Mandatory Compliance</span></div>"
+                        f"<div style='margin:.65rem 0'>⚠ &nbsp; <b>{hr} Risks</b><br><span class='muted'>High-Severity Risks</span></div>"
+                        f"<div style='margin:.65rem 0'>▤ &nbsp; <b>{verify} Items</b><br><span class='muted'>Clarifications Needed</span></div>"
+                        f"</div></div></div>",
+                        unsafe_allow_html=True
+                    )
                 with col2:
-                    category_counts=pd.Series([m.get("Category","Other") for m in matches]).value_counts().head(5)
-                    st.markdown("<div class='rfp-panel bluepanel'><h3>▥ &nbsp; Requirements by Category</h3><div class='muted'>Extracted requirement distribution</div></div>",unsafe_allow_html=True)
-                    if not category_counts.empty: st.bar_chart(category_counts, height=190, color="#171717")
+                    st.markdown(
+                        f"<div class='rfp-chart-card rfp-chart-card-tall'><div class='rfp-chart-title'>Requirements by Category</div>"
+                        f"<div class='rfp-chart-subtitle'>Extracted requirement distribution</div>"
+                        f"<div class='rfp-html-chart'><div class='rfp-hbar-list'>{category_chart}</div></div></div>",
+                        unsafe_allow_html=True
+                    )
+
+                chart_col1,chart_col2=st.columns([1,1],gap="large")
+                with chart_col1:
+                    st.markdown(
+                        f"<div class='rfp-chart-card'><div class='rfp-chart-title'>Requirement Composition</div>"
+                        f"<div class='rfp-chart-subtitle'>Mandatory, optional and verification workload</div>"
+                        f"{donut_chart}</div>",
+                        unsafe_allow_html=True
+                    )
+                with chart_col2:
+                    st.markdown(
+                        f"<div class='rfp-chart-card'><div class='rfp-chart-title'>Requirements Across Source Pages</div>"
+                        f"<div class='rfp-chart-subtitle'>Requirement count by extracted page or worksheet</div>"
+                        f"{line_chart}</div>",
+                        unsafe_allow_html=True
+                    )
+
                 gaps=[m for m in matches if m.get("Type")=="Mandatory" and m.get("Match Status")=="Gap"]
                 strengths=[m for m in matches if m.get("Match Status")=="Match"]
                 a,b=st.columns(2)
